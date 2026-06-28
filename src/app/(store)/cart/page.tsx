@@ -1,13 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { ShoppingCart, Plus, Minus, Trash2, Banknote, QrCode, BookUser, Package } from 'lucide-react'
 import { useCart } from '@/lib/cart-context'
 import { useShopAuth } from '@/lib/shop-auth'
 import { supabase } from '@/lib/supabase'
-import { PaymentMethod } from '@/lib/types'
+import { PaymentMethod, Settings } from '@/lib/types'
 
 const DELIVERY_FREE_THRESHOLD = 2000
 
@@ -15,6 +15,13 @@ export default function CartPage() {
   const { items, updateQty, removeItem, subtotal, clearCart } = useCart()
   const { shop } = useShopAuth()
   const router = useRouter()
+  const [settings, setSettings] = useState<Settings | null>(null)
+
+  useEffect(() => {
+    supabase.from('settings').select('*').eq('id', 1).single().then(({ data }) => {
+      setSettings(data as Settings)
+    })
+  }, [])
 
   const [deliveryOption, setDeliveryOption] = useState<'delivery' | 'pickup'>('delivery')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
@@ -243,6 +250,27 @@ export default function CartPage() {
           <p className="text-[11px] text-slate-400 mt-2 px-1">
             હાલની બાકી રકમ: ₹{shop.current_balance} {shop.credit_limit > 0 && `/ લિમિટ: ₹${shop.credit_limit}`}
           </p>
+        )}
+
+        {paymentMethod === 'qr' && (
+          <div className="mt-3 bg-white rounded-2xl border border-slate-200 p-4 flex flex-col items-center">
+            {settings?.upi_qr_code_url ? (
+              <>
+                <Image
+                  src={settings.upi_qr_code_url}
+                  alt="UPI QR"
+                  width={180}
+                  height={180}
+                  className="rounded-xl border border-slate-100"
+                />
+                <p className="text-xs text-slate-500 mt-3 text-center">
+                  ₹{grandTotal.toFixed(2)} pay કરવા માટે આ QR scan કરો, પછી નીચે ઓર્ડર કરો બટન દબાવો
+                </p>
+              </>
+            ) : (
+              <p className="text-xs text-slate-400 text-center">QR code હજુ સેટ નથી થયો, દુકાનદારનો સંપર્ક કરો</p>
+            )}
+          </div>
         )}
       </div>
 

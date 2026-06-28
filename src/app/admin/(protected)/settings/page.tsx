@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Settings } from '@/lib/types'
+import ImageUploadField from '@/components/ImageUploadField'
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<Settings | null>(null)
@@ -84,29 +85,22 @@ export default function AdminSettingsPage() {
             placeholder="https://..."
           />
         </div>
-        <div>
-          <label className="text-xs font-bold text-slate-500">App QR Code Image URL</label>
-          <input
-            value={settings.app_qr_code_url || ''}
-            onChange={(e) => setSettings({ ...settings, app_qr_code_url: e.target.value })}
-            className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm mt-1"
-            placeholder="QR code image link"
-          />
-          <p className="text-[11px] text-slate-400 mt-1">આ QR counter પર print કરીને રાખી શકાય - scan કરી app download/order કરી શકાય</p>
-        </div>
+        <ImageUploadField
+          label="App QR Code"
+          value={settings.app_qr_code_url}
+          onChange={(url) => setSettings({ ...settings, app_qr_code_url: url })}
+          hint="આ QR counter પર print કરીને રાખી શકાય - scan કરી app download/order કરી શકાય"
+        />
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
         <h2 className="font-bold text-slate-800">Payment QR (UPI)</h2>
-        <div>
-          <label className="text-xs font-bold text-slate-500">UPI QR Code Image URL</label>
-          <input
-            value={settings.upi_qr_code_url || ''}
-            onChange={(e) => setSettings({ ...settings, upi_qr_code_url: e.target.value })}
-            className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm mt-1"
-            placeholder="UPI QR image link"
-          />
-        </div>
+        <ImageUploadField
+          label="તમારો UPI QR Code"
+          value={settings.upi_qr_code_url}
+          onChange={(url) => setSettings({ ...settings, upi_qr_code_url: url })}
+          hint="આ QR shopkeeper ને payment કરતી વખતે (QR/UPI પસંદ કરે ત્યારે) દેખાશે"
+        />
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
