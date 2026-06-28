@@ -60,6 +60,8 @@ export default function CartPage() {
         shop_name_snapshot: shop.shop_name,
         shop_phone_snapshot: shop.phone,
         payment_method: paymentMethod,
+        delivery_mode: deliveryOption === 'pickup' ? 'pickup' : 'home_delivery',
+        customer_address: shop.address || null,
         subtotal,
         total_amount: grandTotal,
         amount_paid: paymentMethod === 'udhar' ? 0 : grandTotal,
@@ -78,6 +80,7 @@ export default function CartPage() {
       order_id: order.id,
       product_id: i.product.id,
       product_name_snapshot: i.product.name,
+      unit_snapshot: i.product.unit,
       price: i.product.price,
       qty: i.qty,
     }))

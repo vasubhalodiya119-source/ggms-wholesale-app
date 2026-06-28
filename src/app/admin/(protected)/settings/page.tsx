@@ -27,6 +27,7 @@ export default function AdminSettingsPage() {
         store_name: settings.store_name,
         store_tagline: settings.store_tagline,
         low_stock_default_threshold: settings.low_stock_default_threshold,
+        order_notes_gujarati: settings.order_notes_gujarati,
       })
       .eq('id', 1)
     setSaved(true)
@@ -71,6 +72,23 @@ export default function AdminSettingsPage() {
             placeholder="દા.ત. Bulk Order પર ખાસ ભાવ મેળવો!"
           />
           <p className="text-[11px] text-slate-400 mt-1">આ headline shopkeeper ની home screen પર scroll થશે</p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
+        <h2 className="font-bold text-slate-800">મહત્વની નોંધ (Bill / WhatsApp Footer)</h2>
+        <div>
+          <label className="text-xs font-bold text-slate-500">Order Notes (દરેક line એક નોંધ)</label>
+          <textarea
+            value={settings.order_notes_gujarati}
+            onChange={(e) => setSettings({ ...settings, order_notes_gujarati: e.target.value })}
+            rows={5}
+            className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm mt-1"
+            placeholder="દરેક નોંધ નવી line પર લખો"
+          />
+          <p className="text-[11px] text-slate-400 mt-1">
+            આ notes દરેક bill (PDF + WhatsApp) ની નીચે દેખાશે. દરેક vaakya નવી લાઈન પર લખો.
+          </p>
         </div>
       </div>
 

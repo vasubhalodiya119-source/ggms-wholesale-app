@@ -44,6 +44,8 @@ export type Order = {
   shop_name_snapshot: string | null
   shop_phone_snapshot: string | null
   payment_method: PaymentMethod
+  delivery_mode: 'home_delivery' | 'pickup'
+  customer_address: string | null
   subtotal: number
   total_amount: number
   amount_paid: number
@@ -57,6 +59,7 @@ export type OrderItem = {
   order_id: string
   product_id: string | null
   product_name_snapshot: string | null
+  unit_snapshot: string
   price: number
   qty: number
   line_total: number
@@ -76,6 +79,7 @@ export type Settings = {
   store_name: string
   store_tagline: string
   low_stock_default_threshold: number
+  order_notes_gujarati: string
 }
 
 export type Admin = {
