@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Search, Mic, Package } from 'lucide-react'
+import { Search, Mic, Package, IndianRupee } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { Category, Settings } from '@/lib/types'
+import { Category, Settings, DailyRate } from '@/lib/types'
 
 export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [settings, setSettings] = useState<Settings | null>(null)
+  const [rates, setRates] = useState<DailyRate[]>([])
   const [search, setSearch] = useState('')
 
   useEffect(() => {
@@ -25,6 +26,12 @@ export default function HomePage() {
       .eq('id', 1)
       .single()
       .then(({ data }) => setSettings(data as Settings))
+
+    supabase
+      .from('daily_rates')
+      .select('*')
+      .order('sort_order')
+      .then(({ data }) => setRates((data as DailyRate[]) || []))
   }, [])
 
   return (
@@ -58,6 +65,33 @@ export default function HomePage() {
         </div>
       )}
 
+      {/* Today's Rate Board */}
+      {rates.length > 0 && (
+        <div className="rounded-2xl bg-slate-900 overflow-hidden shadow-sm">
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-800">
+            <IndianRupee size={15} className="text-amber-400" />
+            <p className="text-amber-400 font-extrabold text-sm tracking-wide">આજનો ભાવ</p>
+            <span className="text-slate-400 text-[10px] ml-auto">TODAY&apos;S RATE</span>
+          </div>
+          <div className="divide-y divide-slate-700/60">
+            {rates.map((rate) => (
+              <div key={rate.id} className="flex items-center justify-between px-4 py-2.5">
+                <span className="text-white text-sm font-semibold">
+                  {rate.item_name}
+                  {rate.item_name_gujarati && (
+                    <span className="text-slate-400 text-xs font-normal"> ({rate.item_name_gujarati})</span>
+                  )}
+                </span>
+                <span className="text-amber-400 font-extrabold text-sm">
+                  ₹{rate.rate}
+                  <span className="text-slate-400 text-xs font-medium">/{rate.unit}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* App download banner */}
       <div className="rounded-2xl bg-gradient-to-br from-green-100 via-lime-50 to-yellow-50 border border-green-100 p-4 flex items-center justify-between">
         <div>
@@ -68,6 +102,9 @@ export default function HomePage() {
           {settings?.app_download_url && (
             <a
               href={settings.app_download_url}
+              download="GGMS-Wholesale.apk"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-block mt-2 text-xs font-bold bg-green-600 text-white px-3 py-1.5 rounded-full"
             >
               Download APK Now

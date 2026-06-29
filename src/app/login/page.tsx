@@ -4,12 +4,12 @@ import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Phone, Lock } from 'lucide-react'
+import { Phone, User } from 'lucide-react'
 import { useShopAuth } from '@/lib/shop-auth'
 
 function LoginContent() {
   const [phone, setPhone] = useState('')
-  const [password, setPassword] = useState('')
+  const [ownerName, setOwnerName] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { login } = useShopAuth()
@@ -21,7 +21,7 @@ function LoginContent() {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const { error } = await login(phone, password)
+    const { error } = await login(phone, ownerName)
     setLoading(false)
     if (error) setError(error)
     else router.push(redirect)
@@ -48,12 +48,11 @@ function LoginContent() {
           />
         </div>
         <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-2xl px-4 py-3">
-          <Lock size={18} className="text-slate-400" />
+          <User size={18} className="text-slate-400" />
           <input
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="પાસવર્ડ"
-            type="password"
+            value={ownerName}
+            onChange={(e) => setOwnerName(e.target.value)}
+            placeholder="તમારું નામ"
             required
             className="flex-1 outline-none text-sm"
           />

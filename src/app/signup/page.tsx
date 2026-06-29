@@ -4,14 +4,13 @@ import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Store, User, Phone, Lock, MapPin } from 'lucide-react'
+import { Store, User, Phone, MapPin } from 'lucide-react'
 import { useShopAuth } from '@/lib/shop-auth'
 
 function SignupContent() {
   const [shopName, setShopName] = useState('')
   const [ownerName, setOwnerName] = useState('')
   const [phone, setPhone] = useState('')
-  const [password, setPassword] = useState('')
   const [address, setAddress] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -24,7 +23,7 @@ function SignupContent() {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const { error } = await signup({ shop_name: shopName, owner_name: ownerName, phone, password, address })
+    const { error } = await signup({ shop_name: shopName, owner_name: ownerName, phone, address })
     setLoading(false)
     if (error) setError(error)
     else router.push(redirect)
@@ -54,7 +53,8 @@ function SignupContent() {
           <input
             value={ownerName}
             onChange={(e) => setOwnerName(e.target.value)}
-            placeholder="માલિકનું નામ"
+            placeholder="તમારું નામ (લોગિન માટે વપરાશે)"
+            required
             className="flex-1 outline-none text-sm"
           />
         </div>
@@ -70,17 +70,6 @@ function SignupContent() {
           />
         </div>
         <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-2xl px-4 py-3">
-          <Lock size={18} className="text-slate-400" />
-          <input
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="પાસવર્ડ"
-            type="password"
-            required
-            className="flex-1 outline-none text-sm"
-          />
-        </div>
-        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-2xl px-4 py-3">
           <MapPin size={18} className="text-slate-400" />
           <input
             value={address}
@@ -89,6 +78,10 @@ function SignupContent() {
             className="flex-1 outline-none text-sm"
           />
         </div>
+
+        <p className="text-[11px] text-slate-400 px-1">
+          📌 લોગિન કરવા માટે તમારે "ફોન નંબર" અને "તમારું નામ" બંને યાદ રાખવા - આ જ login details છે.
+        </p>
 
         {error && <p className="text-red-600 text-xs font-semibold px-1">{error}</p>}
 

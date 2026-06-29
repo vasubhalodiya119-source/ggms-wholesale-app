@@ -3,7 +3,7 @@ export type Shop = {
   shop_name: string
   owner_name: string | null
   phone: string
-  password: string
+  password: string | null
   address: string | null
   credit_limit: number
   current_balance: number
@@ -86,6 +86,22 @@ export type Admin = {
   id: string
   name: string
   phone: string
-  password: string
+  password: string | null
   created_at: string
+}
+
+export type Broadcast = {
+  id: string
+  message: string
+  created_at: string
+}
+
+export type DailyRate = {
+  id: string
+  item_name: string
+  item_name_gujarati: string | null
+  rate: number
+  unit: string
+  sort_order: number
+  updated_at: string
 }

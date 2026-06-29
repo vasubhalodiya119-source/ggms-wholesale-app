@@ -10,6 +10,7 @@ export default function AdminShopsPage() {
   const [shops, setShops] = useState<Shop[]>([])
   const [search, setSearch] = useState('')
   const [editing, setEditing] = useState<Shop | null>(null)
+  const [ownerNameInput, setOwnerNameInput] = useState('')
   const [creditLimitInput, setCreditLimitInput] = useState('')
   const [balanceAdjustInput, setBalanceAdjustInput] = useState('')
 
@@ -24,6 +25,7 @@ export default function AdminShopsPage() {
 
   function openEdit(shop: Shop) {
     setEditing(shop)
+    setOwnerNameInput(shop.owner_name || '')
     setCreditLimitInput(String(shop.credit_limit))
     setBalanceAdjustInput(String(shop.current_balance))
   }
@@ -35,7 +37,7 @@ export default function AdminShopsPage() {
 
     await supabase
       .from('shops')
-      .update({ credit_limit: newLimit, current_balance: newBalance })
+      .update({ owner_name: ownerNameInput, credit_limit: newLimit, current_balance: newBalance })
       .eq('id', editing.id)
 
     // log adjustment if balance changed manually

@@ -7,8 +7,8 @@ import { Shop } from './types'
 type ShopAuthContextType = {
   shop: Shop | null
   loading: boolean
-  login: (phone: string, password: string) => Promise<{ error: string | null }>
-  signup: (data: { shop_name: string; owner_name: string; phone: string; password: string; address: string }) => Promise<{ error: string | null }>
+  login: (phone: string, ownerName: string) => Promise<{ error: string | null }>
+  signup: (data: { shop_name: string; owner_name: string; phone: string; address: string }) => Promise<{ error: string | null }>
   logout: () => void
   refreshShop: () => Promise<void>
 }
@@ -33,16 +33,18 @@ export function ShopAuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  async function login(phone: string, password: string) {
+  async function login(phone: string, ownerName: string) {
     const { data, error } = await supabase
       .from('shops')
       .select('*')
-      .eq('phone', phone)
-      .eq('password', password)
+      .eq('phone', phone.trim())
       .maybeSingle()
 
     if (error) return { error: 'કંઈક ભૂલ થઈ, ફરી પ્રયત્ન કરો' }
-    if (!data) return { error: 'ફોન નંબર અથવા પાસવર્ડ ખોટો છે' }
+    if (!data) return { error: 'આ ફોન નંબર નોંધાયેલ નથી' }
+    if ((data.owner_name || '').trim().toLowerCase() !== ownerName.trim().toLowerCase()) {
+      return { error: 'નામ મેળ ખાતું નથી, ફરી તપાસો' }
+    }
     if (!data.is_active) return { error: 'તમારું એકાઉન્ટ બંધ કરવામાં આવ્યું છે' }
 
     setShop(data as Shop)
@@ -50,7 +52,7 @@ export function ShopAuthProvider({ children }: { children: ReactNode }) {
     return { error: null }
   }
 
-  async function signup(formData: { shop_name: string; owner_name: string; phone: string; password: string; address: string }) {
+  async function signup(formData: { shop_name: string; owner_name: string; phone: string; address: string }) {
     const { data: existing } = await supabase
       .from('shops')
       .select('id')
@@ -65,7 +67,6 @@ export function ShopAuthProvider({ children }: { children: ReactNode }) {
         shop_name: formData.shop_name,
         owner_name: formData.owner_name,
         phone: formData.phone,
-        password: formData.password,
         address: formData.address,
       })
       .select()

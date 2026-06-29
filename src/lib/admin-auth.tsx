@@ -34,7 +34,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase
       .from('admins')
       .select('*')
-      .eq('phone', phone)
+      .eq('phone', phone.trim())
       .eq('password', password)
       .maybeSingle()
 

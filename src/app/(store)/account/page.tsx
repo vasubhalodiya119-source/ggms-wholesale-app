@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ShoppingBasket, Heart, ShoppingCart, MapPin, LogOut, BookUser } from 'lucide-react'
+import { ShoppingBasket, Heart, ShoppingCart, MapPin, LogOut, BookUser, Megaphone } from 'lucide-react'
 import { useShopAuth } from '@/lib/shop-auth'
 
 export default function AccountPage() {
@@ -58,6 +58,10 @@ export default function AccountPage() {
         <Link href="/cart" className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col items-center gap-2">
           <ShoppingCart size={26} className="text-green-600" />
           <span className="font-bold text-slate-800 text-sm">Cart</span>
+        </Link>
+        <Link href="/notifications" className="col-span-2 bg-white rounded-2xl border border-slate-200 p-4 flex items-center gap-3">
+          <Megaphone size={22} className="text-purple-500" />
+          <span className="font-bold text-slate-800 text-sm">Notifications</span>
         </Link>
       </div>
 
