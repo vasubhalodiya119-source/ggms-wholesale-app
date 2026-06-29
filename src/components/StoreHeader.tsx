@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { ShoppingCart, ShoppingBasket, User } from 'lucide-react'
+import Image from 'next/image'
+import { ShoppingCart, User } from 'lucide-react'
 import { useCart } from '@/lib/cart-context'
 
 export default function StoreHeader() {
@@ -10,8 +11,8 @@ export default function StoreHeader() {
   return (
     <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200 px-4 py-3 flex items-center justify-between">
       <Link href="/" className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-green-600 flex items-center justify-center text-white shadow-sm">
-          <ShoppingBasket size={22} />
+        <div className="w-10 h-10 rounded-xl overflow-hidden shadow-sm flex-shrink-0">
+          <Image src="/logo.png" alt="GGM&S" width={40} height={40} className="object-cover w-full h-full" />
         </div>
         <div>
           <h1 className="font-bold text-slate-900 leading-tight text-base">GGM&amp;S Grocery</h1>

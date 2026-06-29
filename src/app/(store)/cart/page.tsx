@@ -23,7 +23,6 @@ export default function CartPage() {
 
   const [deliveryOption, setDeliveryOption] = useState<'delivery' | 'pickup'>('delivery')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
-  const [coupon, setCoupon] = useState('')
   const [placing, setPlacing] = useState(false)
   const [error, setError] = useState('')
 
@@ -145,20 +144,6 @@ export default function CartPage() {
             </button>
           </div>
         ))}
-      </div>
-
-      {/* Coupon */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-4">
-        <p className="text-xs font-bold text-slate-400 mb-2">APPLY COUPON / કૂપન કોડ</p>
-        <div className="flex gap-2">
-          <input
-            value={coupon}
-            onChange={(e) => setCoupon(e.target.value)}
-            placeholder="દા.ત. FIRSTORDER"
-            className="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none"
-          />
-          <button className="bg-slate-900 text-white text-sm font-bold px-4 rounded-xl">APPLY</button>
-        </div>
       </div>
 
       {/* Order pricing */}
