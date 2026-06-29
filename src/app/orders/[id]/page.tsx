@@ -89,7 +89,7 @@ export default function OrderDetailPage() {
           )}
           <span className="text-slate-500">Delivery Mode:</span>
           <span className="font-bold text-slate-800">
-            {order.delivery_mode === 'pickup' ? 'Pick Up at Store' : 'Home Delivery'}
+            {order.delivery_mode === 'pickup' ? 'Pick Up at Store' : 'Shop Delivery'}
           </span>
         </div>
 

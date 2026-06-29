@@ -9,8 +9,6 @@ import { useShopAuth } from '@/lib/shop-auth'
 import { supabase } from '@/lib/supabase'
 import { PaymentMethod, Settings } from '@/lib/types'
 
-const DELIVERY_FREE_THRESHOLD = 2000
-
 export default function CartPage() {
   const { items, updateQty, removeItem, subtotal, clearCart } = useCart()
   const { shop } = useShopAuth()
@@ -29,7 +27,7 @@ export default function CartPage() {
   const [placing, setPlacing] = useState(false)
   const [error, setError] = useState('')
 
-  const deliveryCharge = deliveryOption === 'delivery' && subtotal < DELIVERY_FREE_THRESHOLD && subtotal > 0 ? 30 : 0
+  const deliveryCharge = 0
   const grandTotal = subtotal + deliveryCharge
 
   async function placeOrder() {
@@ -172,14 +170,6 @@ export default function CartPage() {
           <span className="text-slate-500">Subtotal</span>
           <span className="font-bold text-slate-800">₹{subtotal.toFixed(2)}</span>
         </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-green-600 font-semibold">Delivery Charge</span>
-          {deliveryCharge === 0 ? (
-            <span className="text-xs font-bold bg-green-50 text-green-600 px-2 py-0.5 rounded-full">FREE</span>
-          ) : (
-            <span className="font-bold text-slate-800">₹{deliveryCharge}</span>
-          )}
-        </div>
         <div className="flex justify-between text-base pt-2 border-t border-slate-100">
           <span className="font-bold text-slate-900">Grand Total</span>
           <span className="font-extrabold text-slate-900">₹{grandTotal.toFixed(2)}</span>
@@ -199,8 +189,8 @@ export default function CartPage() {
             <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
               <Package size={16} />
             </div>
-            <span className="text-xs font-bold text-slate-700">HOME DELIVERY</span>
-            <span className="text-[10px] text-orange-500 font-semibold">₹2000+ જરૂરી</span>
+            <span className="text-xs font-bold text-slate-700">SHOP DELIVERY</span>
+            <span className="text-[10px] text-green-600 font-semibold">ફ્રી ડિલિવરી</span>
           </button>
           <button
             onClick={() => setDeliveryOption('pickup')}
@@ -215,6 +205,14 @@ export default function CartPage() {
             <span className="text-[10px] text-slate-400">દુકાનેથી લઈ જાવ</span>
           </button>
         </div>
+
+        {deliveryOption === 'delivery' && (
+          <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5">
+            <p className="text-xs text-amber-700 font-semibold">
+              નોંધ:- ઓર્ડર આપ્યા પછી 3 થી 4 કલાક નો સમય લાગી શકે.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Payment method */}

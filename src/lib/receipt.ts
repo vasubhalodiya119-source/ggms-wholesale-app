@@ -1,7 +1,7 @@
 import { Order, OrderItem, Settings } from './types'
 
 export function buildWhatsAppMessage(order: Order, items: OrderItem[], settings: Settings | null): string {
-  const deliveryLabel = order.delivery_mode === 'pickup' ? '🏠 Pick Up at Store' : '🚚 Home Delivery'
+  const deliveryLabel = order.delivery_mode === 'pickup' ? '🏠 Pick Up at Store' : '🚚 Shop Delivery'
 
   let msg = `📦 *NEW ORDER: ${settings?.store_name || 'GGM&S Grocery'}*\n\n`
   msg += `📋 Delivery Mode: ${deliveryLabel}\n\n`
