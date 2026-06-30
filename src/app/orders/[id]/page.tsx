@@ -119,6 +119,13 @@ export default function OrderDetailPage() {
           <span className="font-extrabold text-green-700 text-lg">₹{order.total_amount.toFixed(2)}</span>
         </div>
 
+        {order.admin_reply && (
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
+            <p className="text-[11px] font-bold text-blue-600 uppercase mb-1">દુકાનદાર તરફથી જવાબ</p>
+            <p className="text-sm text-blue-800">{order.admin_reply}</p>
+          </div>
+        )}
+
         {order.amount_due > 0 && (
           <div className="bg-red-50 rounded-xl p-3 flex justify-between items-center">
             <span className="font-bold text-red-600 text-sm">બાકી રકમ (Due)</span>

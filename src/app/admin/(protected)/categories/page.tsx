@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Plus, Pencil, Trash2, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { Category } from '@/lib/types'
+import ImageUploadField from '@/components/ImageUploadField'
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([])
@@ -66,6 +67,14 @@ export default function AdminCategoriesPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {categories.map((c) => (
           <div key={c.id} className="bg-white rounded-2xl border border-slate-200 p-4">
+            <div className="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden mb-2 flex items-center justify-center">
+              {c.image_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={c.image_url} alt={c.name} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-slate-300 text-xs">No img</span>
+              )}
+            </div>
             <p className="font-bold text-slate-800 text-sm">{c.name}</p>
             {c.name_gujarati && <p className="text-xs text-slate-400">{c.name_gujarati}</p>}
             <div className="flex gap-3 mt-3">
@@ -101,11 +110,10 @@ export default function AdminCategoriesPage() {
               onChange={(e) => setForm({ ...form, name_gujarati: e.target.value })}
               className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm"
             />
-            <input
-              placeholder="Image URL"
-              value={form.image_url}
-              onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-              className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm"
+            <ImageUploadField
+              label="Category Image"
+              value={form.image_url || null}
+              onChange={(url) => setForm({ ...form, image_url: url })}
             />
             <input
               placeholder="Sort Order"

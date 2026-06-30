@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Plus, Pencil, Trash2, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { Product, Category } from '@/lib/types'
+import ImageUploadField from '@/components/ImageUploadField'
 
 export default function AdminInventoryPage() {
   const [products, setProducts] = useState<Product[]>([])
@@ -199,11 +200,10 @@ export default function AdminInventoryPage() {
                 className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm"
               />
             </div>
-            <input
-              placeholder="Image URL"
-              value={form.image_url}
-              onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-              className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm"
+            <ImageUploadField
+              label="Product Image"
+              value={form.image_url || null}
+              onChange={(url) => setForm({ ...form, image_url: url })}
             />
             <button onClick={handleSave} className="w-full bg-green-600 text-white font-bold py-3 rounded-xl mt-2">
               Save

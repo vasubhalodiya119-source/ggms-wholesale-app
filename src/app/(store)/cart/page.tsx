@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { ShoppingCart, Plus, Minus, Trash2, Banknote, QrCode, BookUser, Package } from 'lucide-react'
+import { ShoppingCart, Plus, Minus, Trash2, Banknote, BookUser, Package } from 'lucide-react'
 import { useCart } from '@/lib/cart-context'
 import { useShopAuth } from '@/lib/shop-auth'
 import { supabase } from '@/lib/supabase'
@@ -203,7 +203,7 @@ export default function CartPage() {
       {/* Payment method */}
       <div>
         <p className="text-sm font-bold text-slate-800 mb-2">PAYMENT METHOD / ચુકવણી પદ્ધતિ</p>
-        <div className="grid grid-cols-3 gap-2.5">
+        <div className="grid grid-cols-2 gap-2.5">
           <button
             onClick={() => setPaymentMethod('cash')}
             className={`bg-white rounded-2xl border p-3 flex flex-col items-center gap-1.5 ${
@@ -211,16 +211,7 @@ export default function CartPage() {
             }`}
           >
             <Banknote size={20} className={paymentMethod === 'cash' ? 'text-green-600' : 'text-slate-400'} />
-            <span className="text-[11px] font-bold text-slate-700">CASH</span>
-          </button>
-          <button
-            onClick={() => setPaymentMethod('qr')}
-            className={`bg-white rounded-2xl border p-3 flex flex-col items-center gap-1.5 ${
-              paymentMethod === 'qr' ? 'border-green-500 ring-2 ring-green-100' : 'border-slate-200'
-            }`}
-          >
-            <QrCode size={20} className={paymentMethod === 'qr' ? 'text-green-600' : 'text-slate-400'} />
-            <span className="text-[11px] font-bold text-slate-700">QR / UPI</span>
+            <span className="text-[11px] font-bold text-slate-700">CASH / રોકડ</span>
           </button>
           <button
             onClick={() => setPaymentMethod('udhar')}
@@ -236,27 +227,6 @@ export default function CartPage() {
           <p className="text-[11px] text-slate-400 mt-2 px-1">
             હાલની બાકી રકમ: ₹{shop.current_balance} {shop.credit_limit > 0 && `/ લિમિટ: ₹${shop.credit_limit}`}
           </p>
-        )}
-
-        {paymentMethod === 'qr' && (
-          <div className="mt-3 bg-white rounded-2xl border border-slate-200 p-4 flex flex-col items-center">
-            {settings?.upi_qr_code_url ? (
-              <>
-                <Image
-                  src={settings.upi_qr_code_url}
-                  alt="UPI QR"
-                  width={180}
-                  height={180}
-                  className="rounded-xl border border-slate-100"
-                />
-                <p className="text-xs text-slate-500 mt-3 text-center">
-                  ₹{grandTotal.toFixed(2)} pay કરવા માટે આ QR scan કરો, પછી નીચે ઓર્ડર કરો બટન દબાવો
-                </p>
-              </>
-            ) : (
-              <p className="text-xs text-slate-400 text-center">QR code હજુ સેટ નથી થયો, દુકાનદારનો સંપર્ક કરો</p>
-            )}
-          </div>
         )}
       </div>
 

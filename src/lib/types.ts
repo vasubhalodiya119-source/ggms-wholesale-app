@@ -51,6 +51,8 @@ export type Order = {
   amount_paid: number
   amount_due: number
   status: OrderStatus
+  admin_reply: string | null
+  admin_reply_at: string | null
   created_at: string
 }
 

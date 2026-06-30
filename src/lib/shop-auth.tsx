@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { supabase } from './supabase'
 import { Shop } from './types'
+import { subscribeToPush } from './push'
 
 type ShopAuthContextType = {
   shop: Shop | null
@@ -25,7 +26,10 @@ export function ShopAuthProvider({ children }: { children: ReactNode }) {
     const savedId = localStorage.getItem(STORAGE_KEY)
     if (savedId) {
       supabase.from('shops').select('*').eq('id', savedId).single().then(({ data }) => {
-        if (data) setShop(data as Shop)
+        if (data) {
+          setShop(data as Shop)
+          subscribeToPush(data.id)
+        }
         setLoading(false)
       })
     } else {
@@ -49,6 +53,7 @@ export function ShopAuthProvider({ children }: { children: ReactNode }) {
 
     setShop(data as Shop)
     localStorage.setItem(STORAGE_KEY, data.id)
+    subscribeToPush(data.id)
     return { error: null }
   }
 
@@ -76,6 +81,7 @@ export function ShopAuthProvider({ children }: { children: ReactNode }) {
 
     setShop(data as Shop)
     localStorage.setItem(STORAGE_KEY, data.id)
+    subscribeToPush(data.id)
     return { error: null }
   }
 

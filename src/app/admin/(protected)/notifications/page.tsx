@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Package, AlertTriangle, Check, Send, Megaphone, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { Broadcast } from '@/lib/types'
+import { triggerPush } from '@/lib/push'
 
 type LowStockAlert = {
   id: string
@@ -63,6 +64,7 @@ export default function NotificationCenterPage() {
     if (!message.trim()) return
     setSending(true)
     await supabase.from('broadcasts').insert({ message: message.trim() })
+    await triggerPush({ title: 'GGM&S Wholesale', body: message.trim(), url: '/notifications' })
     setMessage('')
     setSending(false)
     load()

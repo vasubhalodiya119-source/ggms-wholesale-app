@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { QRCodeSVG } from 'qrcode.react'
 import { Search, Mic, Package, IndianRupee } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { Category, Settings, DailyRate } from '@/lib/types'
@@ -12,6 +13,16 @@ export default function HomePage() {
   const [settings, setSettings] = useState<Settings | null>(null)
   const [rates, setRates] = useState<DailyRate[]>([])
   const [search, setSearch] = useState('')
+  const [appUrl, setAppUrl] = useState('')
+
+  useEffect(() => {
+    setAppUrl(window.location.origin)
+
+    // First time app open - ask for notification permission
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission()
+    }
+  }, [])
 
   useEffect(() => {
     supabase
@@ -93,12 +104,13 @@ export default function HomePage() {
       )}
 
       {/* App download banner */}
-      <div className="rounded-2xl bg-gradient-to-br from-green-100 via-lime-50 to-yellow-50 border border-green-100 p-4 flex items-center justify-between">
-        <div>
+      <div className="rounded-2xl bg-gradient-to-br from-green-100 via-lime-50 to-yellow-50 border border-green-100 p-4 flex items-center justify-between gap-3">
+        <div className="min-w-0">
           <p className="font-bold text-slate-800 text-sm leading-snug">
             Download Our Grocery App
           </p>
           <p className="text-[11px] text-slate-500 mt-0.5">Fast Delivery • Fresh Products • Best Prices</p>
+          <p className="text-[10px] text-slate-400 mt-1">QR scan કરો અથવા નીચે button દબાવો</p>
           {settings?.app_download_url && (
             <a
               href={settings.app_download_url}
@@ -111,8 +123,12 @@ export default function HomePage() {
             </a>
           )}
         </div>
-        <div className="w-16 h-16 rounded-xl bg-white/60 flex items-center justify-center flex-shrink-0">
-          <Package size={32} className="text-green-600" />
+        <div className="w-20 h-20 rounded-xl bg-white p-1.5 flex items-center justify-center flex-shrink-0 shadow-sm">
+          {appUrl ? (
+            <QRCodeSVG value={appUrl} size={68} level="M" />
+          ) : (
+            <Package size={28} className="text-green-600" />
+          )}
         </div>
       </div>
 
