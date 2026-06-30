@@ -35,7 +35,7 @@ export default function MyOrdersPage() {
   }, [shop])
 
   return (
-    <div className="px-4 pt-3 pb-4 max-w-md mx-auto">
+    <div className="px-4 pt-3 pb-4 sm:max-w-md sm:mx-auto">
       <div className="flex items-center gap-3 mb-4">
         <button onClick={() => router.back()} className="text-slate-500">
           <ArrowLeft size={20} />

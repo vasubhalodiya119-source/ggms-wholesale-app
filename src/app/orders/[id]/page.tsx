@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'next/navigation'
+import { QRCodeSVG } from 'qrcode.react'
 import { CheckCircle2, Banknote, QrCode, BookUser, Download, Loader2, Package, Truck, Store } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { Order, OrderItem, Settings } from '@/lib/types'
@@ -20,7 +21,12 @@ export default function OrderDetailPage() {
   const [items, setItems] = useState<OrderItem[]>([])
   const [settings, setSettings] = useState<Settings | null>(null)
   const [downloading, setDownloading] = useState(false)
+  const [appUrl, setAppUrl] = useState('')
   const receiptRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    setAppUrl(window.location.origin)
+  }, [])
 
   useEffect(() => {
     supabase.from('orders').select('*').eq('id', orderId).single().then(({ data }) => {
@@ -63,7 +69,7 @@ export default function OrderDetailPage() {
   const numberCircles = ['1', '2', '3', '4', '5']
 
   return (
-    <div className="px-4 pt-6 pb-8 max-w-md mx-auto space-y-4">
+    <div className="px-4 pt-6 pb-8 sm:max-w-md sm:mx-auto space-y-4">
       <div className="flex flex-col items-center text-center">
         <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mb-3">
           <CheckCircle2 size={32} className="text-green-600" />
@@ -160,6 +166,17 @@ export default function OrderDetailPage() {
             </div>
           </div>
         )}
+
+        {/* App download QR - part of receipt so it shows in PDF/print too */}
+        <div className="pt-3 border-t border-slate-100 flex items-center justify-center gap-3">
+          <div className="bg-white p-1.5 rounded-lg border border-slate-100">
+            <QRCodeSVG value={appUrl || 'https://ggms-wholesale-app.vercel.app'} size={56} level="M" />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold text-slate-600">App Download / Order કરવા</p>
+            <p className="text-[10px] text-slate-400">QR Scan કરો</p>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
