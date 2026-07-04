@@ -27,12 +27,14 @@ self.addEventListener('fetch', (event) => {
 
 // Push notification - shows even when app is closed
 self.addEventListener('push', (event) => {
-  let data = { title: 'GGM&S Wholesale', body: 'નવું notification', url: '/' };
+  let data = { title: 'GGM&S Wholesale', body: 'નવું notification', url: '/', requireInteraction: false, tag: 'default' }
   try {
-    if (event.data) data = { ...data, ...event.data.json() };
+    if (event.data) data = { ...data, ...event.data.json() }
   } catch (e) {
-    if (event.data) data.body = event.data.text();
+    if (event.data) data.body = event.data.text()
   }
+
+  const isNewOrder = data.tag === 'new-order'
 
   event.waitUntil(
     self.registration.showNotification(data.title, {
@@ -40,9 +42,12 @@ self.addEventListener('push', (event) => {
       icon: '/icons/icon-192.png',
       badge: '/icons/icon-192.png',
       data: { url: data.url || '/' },
-      vibrate: [200, 100, 200],
+      vibrate: isNewOrder ? [300, 100, 300, 100, 300] : [200, 100, 200],
+      requireInteraction: isNewOrder, // new order notification screen par raheshe jyari sudi dismiss na kare
+      tag: data.tag || 'default',
+      renotify: true,
     })
-  );
+  )
 });
 
 // Click on notification - open the app

@@ -14,6 +14,42 @@ type AdminAuthContextType = {
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined)
 const STORAGE_KEY = 'ggms_admin_session'
 
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const rawData = window.atob(base64)
+  const outputArray = new Uint8Array(rawData.length)
+  for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i)
+  return outputArray
+}
+
+async function subscribeAdminToPush(adminId: string) {
+  if (typeof window === 'undefined') return
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
+  const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+  if (!vapidKey) return
+  try {
+    const permission = await Notification.requestPermission()
+    if (permission !== 'granted') return
+    const reg = await navigator.serviceWorker.ready
+    let sub = await reg.pushManager.getSubscription()
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidKey),
+      })
+    }
+    const subJson = sub.toJSON()
+    if (!subJson.endpoint || !subJson.keys?.p256dh || !subJson.keys?.auth) return
+    await supabase.from('admin_push_subscriptions').upsert(
+      { admin_id: adminId, endpoint: subJson.endpoint, p256dh: subJson.keys.p256dh, auth: subJson.keys.auth },
+      { onConflict: 'endpoint' }
+    )
+  } catch (err) {
+    console.error('Admin push subscribe failed', err)
+  }
+}
+
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [admin, setAdmin] = useState<Admin | null>(null)
   const [loading, setLoading] = useState(true)
@@ -22,7 +58,10 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     const savedId = localStorage.getItem(STORAGE_KEY)
     if (savedId) {
       supabase.from('admins').select('*').eq('id', savedId).single().then(({ data }) => {
-        if (data) setAdmin(data as Admin)
+        if (data) {
+          setAdmin(data as Admin)
+          subscribeAdminToPush(data.id)
+        }
         setLoading(false)
       })
     } else {
@@ -43,6 +82,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
 
     setAdmin(data as Admin)
     localStorage.setItem(STORAGE_KEY, data.id)
+    subscribeAdminToPush(data.id)
     return { error: null }
   }
 

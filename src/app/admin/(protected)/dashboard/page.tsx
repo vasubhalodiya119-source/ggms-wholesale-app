@@ -1,16 +1,29 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle2, XCircle, Clock, X, ShoppingBag, MessageCircle, Send } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { Order, OrderItem } from '@/lib/types'
 import { buildWhatsAppUrl } from '@/lib/receipt'
+import { triggerPush } from '@/lib/push'
 
 type CategoryStock = { name: string; count: number }
 type NewOrderAlert = { order: Order; items: OrderItem[] }
 
 export default function AdminDashboard() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardContent />
+    </Suspense>
+  )
+}
+
+function DashboardContent() {
+  const searchParams = useSearchParams()
+  const newOrderId = searchParams.get('new_order')
+
   const [totalSales, setTotalSales] = useState(0)
   const [totalOrders, setTotalOrders] = useState(0)
   const [pendingOrders, setPendingOrders] = useState(0)
@@ -57,6 +70,18 @@ export default function AdminDashboard() {
       .eq('is_resolved', false)
     setCreditAlertCount(creditAlerts || 0)
   }, [])
+
+  // Notification tap: new_order=<id> URL param thi direct popup open karo
+  useEffect(() => {
+    if (!newOrderId) return
+    async function loadOrderFromUrl() {
+      const { data: order } = await supabase.from('orders').select('*').eq('id', newOrderId).single()
+      if (!order) return
+      const { data: items } = await supabase.from('order_items').select('*').eq('order_id', newOrderId)
+      setNewOrderAlert({ order: order as Order, items: (items as OrderItem[]) || [] })
+    }
+    loadOrderFromUrl()
+  }, [newOrderId])
 
   useEffect(() => {
     load()
@@ -106,6 +131,15 @@ export default function AdminDashboard() {
       .from('orders')
       .update({ admin_reply: replyText.trim(), admin_reply_at: new Date().toISOString() })
       .eq('id', newOrderAlert.order.id)
+
+    // shopkeeper ne push notification moklavo - reply aavyo
+    await triggerPush({
+      title: 'GGM&S - ઓર્ડર Reply 📩',
+      body: replyText.trim(),
+      url: `/orders/${newOrderAlert.order.id}`,
+      shop_id: newOrderAlert.order.shop_id || undefined,
+    })
+
     setActionLoading(false)
     setNewOrderAlert(null)
     setReplyText('')
