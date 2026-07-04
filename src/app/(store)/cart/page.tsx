@@ -76,9 +76,11 @@ export default function CartPage() {
     const orderItems = items.map((i) => ({
       order_id: order.id,
       product_id: i.product.id,
-      product_name_snapshot: i.product.name,
-      unit_snapshot: i.product.unit,
-      price: i.product.price,
+      product_name_snapshot: i.variant
+        ? `${i.product.name} (${i.variant.size_label})`
+        : i.product.name,
+      unit_snapshot: i.variant ? i.variant.size_label : i.product.unit,
+      price: i.variant ? i.variant.price : i.product.price,
       qty: i.qty,
     }))
 
@@ -115,7 +117,9 @@ export default function CartPage() {
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100">
-        {items.map(({ product, qty }) => (
+        {items.map(({ product, qty, variant }) => {
+          const displayPrice = variant ? variant.price : product.price
+          return (
           <div key={product.id} className="p-3 flex gap-3 items-center">
             <div className="w-14 h-14 rounded-xl bg-slate-100 overflow-hidden relative flex-shrink-0">
               {product.image_url ? (
@@ -128,7 +132,8 @@ export default function CartPage() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-slate-800 truncate">{product.name}</p>
-              <p className="text-green-700 font-extrabold text-sm">₹{product.price}</p>
+              {variant && <p className="text-[11px] text-slate-400">{variant.size_label}</p>}
+              <p className="text-green-700 font-extrabold text-sm">₹{displayPrice}</p>
             </div>
             <div className="flex items-center gap-2 bg-slate-100 rounded-xl px-2 py-1.5">
               <button onClick={() => updateQty(product.id, qty - 1)} className="text-slate-600">
@@ -143,7 +148,8 @@ export default function CartPage() {
               <Trash2 size={16} />
             </button>
           </div>
-        ))}
+          )
+        })}
       </div>
 
       {/* Order pricing */}

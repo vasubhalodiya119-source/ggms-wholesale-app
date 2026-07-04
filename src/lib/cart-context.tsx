@@ -1,11 +1,11 @@
 'use client'
 
 import { createContext, useContext, useState, ReactNode } from 'react'
-import { Product, CartItem } from './types'
+import { Product, CartItem, ProductVariant } from './types'
 
 type CartContextType = {
   items: CartItem[]
-  addItem: (product: Product, qty?: number) => void
+  addItem: (product: Product, qty?: number, variant?: ProductVariant) => void
   removeItem: (productId: string) => void
   updateQty: (productId: string, qty: number) => void
   clearCart: () => void
@@ -18,15 +18,15 @@ const CartContext = createContext<CartContextType | undefined>(undefined)
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
 
-  function addItem(product: Product, qty: number = 1) {
+  function addItem(product: Product, qty: number = 1, variant?: ProductVariant) {
     setItems((prev) => {
       const existing = prev.find((i) => i.product.id === product.id)
       if (existing) {
         return prev.map((i) =>
-          i.product.id === product.id ? { ...i, qty: i.qty + qty } : i
+          i.product.id === product.id ? { ...i, qty: i.qty + qty, variant: variant ?? i.variant } : i
         )
       }
-      return [...prev, { product, qty }]
+      return [...prev, { product, qty, variant: variant || null }]
     })
   }
 
@@ -46,7 +46,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems([])
   }
 
-  const subtotal = items.reduce((sum, i) => sum + i.product.price * i.qty, 0)
+  // variant price ley agar available hoy to
+  const subtotal = items.reduce((sum, i) => {
+    const price = i.variant ? i.variant.price : i.product.price
+    return sum + price * i.qty
+  }, 0)
   const uniqueCount = items.length
 
   return (

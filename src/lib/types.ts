@@ -67,8 +67,19 @@ export type OrderItem = {
   line_total: number
 }
 
+export type ProductVariant = {
+  id: string
+  product_id: string
+  size_label: string
+  price: number
+  mrp: number | null
+  stock_qty: number
+  sort_order: number
+}
+
 export type CartItem = {
   product: Product
+  variant?: ProductVariant | null
   qty: number
 }
 
