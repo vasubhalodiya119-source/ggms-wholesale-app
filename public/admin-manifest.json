@@ -1,0 +1,24 @@
+{
+  "name": "GGM&Sons Admin",
+  "short_name": "GGM&Sons",
+  "description": "GGM&Sons Wholesale Admin Panel",
+  "start_url": "/admin-app",
+  "scope": "/admin-app",
+  "display": "standalone",
+  "background_color": "#14532d",
+  "theme_color": "#14532d",
+  "icons": [
+    {
+      "src": "/icons/admin-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/admin-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

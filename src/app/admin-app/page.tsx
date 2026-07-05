@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Phone, Lock } from 'lucide-react'
@@ -13,6 +13,15 @@ export default function AdminAppLoginPage() {
   const [loading, setLoading] = useState(false)
   const { login } = useAdminAuth()
   const router = useRouter()
+
+  useEffect(() => {
+    // Set admin manifest for "Add to Home Screen" to show GGM&Sons Admin
+    const link = document.createElement('link')
+    link.rel = 'manifest'
+    link.href = '/admin-manifest.json'
+    document.head.appendChild(link)
+    return () => { document.head.removeChild(link) }
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
