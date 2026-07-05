@@ -34,20 +34,28 @@ self.addEventListener('push', (event) => {
 
   const isNewOrder = data.tag === 'new-order';
 
+  // Play sound via open clients (if app is open)
   event.waitUntil(
-    self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: '/icons/icon-192.png',
-      badge: '/icons/icon-192.png',
-      data: { url: data.url || '/' },
-      vibrate: isNewOrder
-        ? [400, 100, 400, 100, 400, 100, 600]  // long-short-long pattern for new orders
-        : [200, 100, 200],
-      requireInteraction: isNewOrder,
-      tag: data.tag || 'default',
-      renotify: true,
-      silent: false,
-    })
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Post message to client to play sound
+      for (const client of clientList) {
+        client.postMessage({ type: 'PLAY_NOTIFICATION_SOUND', isNewOrder });
+      }
+    }).then(() =>
+      self.registration.showNotification(data.title, {
+        body: data.body,
+        icon: '/icons/icon-192.png',
+        badge: '/icons/icon-192.png',
+        data: { url: data.url || '/' },
+        vibrate: isNewOrder
+          ? [400, 100, 400, 100, 400, 100, 600]
+          : [200, 100, 200],
+        requireInteraction: isNewOrder,
+        tag: data.tag || 'default',
+        renotify: true,
+        silent: false,
+      })
+    )
   );
 });
 
