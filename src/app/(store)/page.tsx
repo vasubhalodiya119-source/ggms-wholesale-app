@@ -1,49 +1,45 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { QRCodeSVG } from 'qrcode.react'
-import { Search, Mic, Package, IndianRupee } from 'lucide-react'
+import { Search, Package, IndianRupee, Mic } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { Category, Settings, DailyRate } from '@/lib/types'
+
+type Banner = { id: string; image_url: string; link_url: string | null }
 
 export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [settings, setSettings] = useState<Settings | null>(null)
   const [rates, setRates] = useState<DailyRate[]>([])
+  const [banners, setBanners] = useState<Banner[]>([])
   const [search, setSearch] = useState('')
   const [appUrl, setAppUrl] = useState('')
+  const [activeBanner, setActiveBanner] = useState(0)
+  const bannerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setAppUrl(window.location.origin)
-
-    // First time app open - ask for notification permission
     if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission()
     }
   }, [])
 
   useEffect(() => {
-    supabase
-      .from('categories')
-      .select('*')
-      .order('sort_order')
-      .then(({ data }) => setCategories((data as Category[]) || []))
-
-    supabase
-      .from('settings')
-      .select('*')
-      .eq('id', 1)
-      .single()
-      .then(({ data }) => setSettings(data as Settings))
-
-    supabase
-      .from('daily_rates')
-      .select('*')
-      .order('sort_order')
-      .then(({ data }) => setRates((data as DailyRate[]) || []))
+    supabase.from('categories').select('*').order('sort_order').then(({ data }) => setCategories((data as Category[]) || []))
+    supabase.from('settings').select('*').eq('id', 1).single().then(({ data }) => setSettings(data as Settings))
+    supabase.from('daily_rates').select('*').order('sort_order').then(({ data }) => setRates((data as DailyRate[]) || []))
+    supabase.from('banners').select('*').eq('is_active', true).order('sort_order').then(({ data }) => setBanners((data as Banner[]) || []))
   }, [])
+
+  // Auto-slide banners every 3s
+  useEffect(() => {
+    if (banners.length <= 1) return
+    const timer = setInterval(() => setActiveBanner(prev => (prev + 1) % banners.length), 3000)
+    return () => clearInterval(timer)
+  }, [banners.length])
 
   return (
     <div className="px-4 pt-3 space-y-4">
@@ -73,6 +69,41 @@ export default function HomePage() {
               🔥 {settings.headline_text}
             </p>
           </div>
+        </div>
+      )}
+
+      {/* Banner Carousel */}
+      {banners.length > 0 && (
+        <div className="relative rounded-2xl overflow-hidden" ref={bannerRef}>
+          <div
+            className="flex transition-transform duration-500 ease-in-out"
+            style={{ transform: `translateX(-${activeBanner * 100}%)` }}
+          >
+            {banners.map((b) => (
+              <div key={b.id} className="flex-shrink-0 w-full">
+                {b.link_url ? (
+                  <a href={b.link_url} target="_blank" rel="noopener noreferrer">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={b.image_url} alt="banner" className="w-full h-40 object-cover" />
+                  </a>
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={b.image_url} alt="banner" className="w-full h-40 object-cover" />
+                )}
+              </div>
+            ))}
+          </div>
+          {banners.length > 1 && (
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+              {banners.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveBanner(i)}
+                  className={`rounded-full transition-all ${i === activeBanner ? 'w-4 h-2 bg-white' : 'w-2 h-2 bg-white/50'}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 

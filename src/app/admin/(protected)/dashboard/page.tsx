@@ -118,6 +118,20 @@ function DashboardContent() {
     if (!newOrderAlert) return
     setActionLoading(true)
     await supabase.from('orders').update({ status }).eq('id', newOrderAlert.order.id)
+
+    // shopkeeper ne notify karo - admin e action lidhu
+    const statusLabels: Record<string, string> = {
+      processing: '✅ Accept - તમારો ઓર્ડર accept થઈ ગયો!',
+      pending: '⏳ Pending - ઓર્ડર pending છે, રાહ જુઓ',
+      cancelled: '❌ Decline - ઓર્ડર decline થયો',
+    }
+    await triggerPush({
+      title: 'GGM&S Wholesale - ઓર્ડર Update 📦',
+      body: statusLabels[status] || 'ઓર્ડર status update',
+      url: `/orders/${newOrderAlert.order.id}`,
+      shop_id: newOrderAlert.order.shop_id || undefined,
+    })
+
     setActionLoading(false)
     setNewOrderAlert(null)
     setReplyText('')
