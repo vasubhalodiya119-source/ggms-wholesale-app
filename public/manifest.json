@@ -1,7 +1,7 @@
 {
   "name": "GGM&S Wholesale",
   "short_name": "GGM&S",
-  "description": "GGM&S Grocery - Wholesale & Retail ordering app",
+  "description": "GGM&S Wholesale - Shopkeeper ordering app",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
