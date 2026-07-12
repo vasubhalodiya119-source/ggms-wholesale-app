@@ -18,6 +18,7 @@ export default function HomePage() {
   const [search, setSearch] = useState('')
   const [appUrl, setAppUrl] = useState('')
   const [activeBanner, setActiveBanner] = useState(0)
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
   const bannerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -25,7 +26,20 @@ export default function HomePage() {
     if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission()
     }
+    const handler = (e: any) => { e.preventDefault(); setDeferredPrompt(e) }
+    window.addEventListener('beforeinstallprompt', handler)
+    return () => window.removeEventListener('beforeinstallprompt', handler)
   }, [])
+
+  async function handleInstallApp() {
+    if (deferredPrompt) {
+      deferredPrompt.prompt()
+      await deferredPrompt.userChoice
+      setDeferredPrompt(null)
+    } else {
+      alert('App install karva mate:\nBrowser menu (3 dots) → "Add to Home Screen" select karo')
+    }
+  }
 
   useEffect(() => {
     supabase.from('categories').select('*').order('sort_order').then(({ data }) => setCategories((data as Category[]) || []))
@@ -138,21 +152,16 @@ export default function HomePage() {
       <div className="rounded-2xl bg-gradient-to-br from-green-100 via-lime-50 to-yellow-50 border border-green-100 p-4 flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="font-bold text-slate-800 text-sm leading-snug">
-            Download Our Grocery App
+            GGM&amp;S Wholesale App
           </p>
           <p className="text-[11px] text-slate-500 mt-0.5">Fast Delivery • Fresh Products • Best Prices</p>
-          <p className="text-[10px] text-slate-400 mt-1">QR scan કરો અથવા નીચે button દબાવો</p>
-          {settings?.app_download_url && (
-            <a
-              href={settings.app_download_url}
-              download="GGMS-Wholesale.apk"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block mt-2 text-xs font-bold bg-green-600 text-white px-3 py-1.5 rounded-full"
-            >
-              Download APK Now
-            </a>
-          )}
+          <p className="text-[10px] text-slate-400 mt-1">નીચે button દબાવો - App Install થઈ જશે!</p>
+          <button
+            onClick={handleInstallApp}
+            className="inline-block mt-2 text-xs font-bold bg-green-600 text-white px-3 py-1.5 rounded-full"
+          >
+            📲 App Install કરો
+          </button>
         </div>
         <div className="w-20 h-20 rounded-xl bg-white p-1.5 flex items-center justify-center flex-shrink-0 shadow-sm">
           {appUrl ? (
