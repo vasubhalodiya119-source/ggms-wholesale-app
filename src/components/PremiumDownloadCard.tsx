@@ -130,7 +130,7 @@ export function PremiumDownloadCard({ downloadUrl, appUrl }: PremiumDownloadCard
         </div>
 
         {/* Right Section: QR Code & Helper Text */}
-        <div className="hidden sm:flex flex-col items-center justify-center shrink-0">
+        <div className="flex flex-col items-center justify-center shrink-0">
           <div className="w-[72px] h-[72px] rounded-xl bg-white shadow-md border border-slate-100 flex items-center justify-center p-1.5 transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg">
             <QRCodeSVG value={appUrl} size={60} level="M" />
           </div>
