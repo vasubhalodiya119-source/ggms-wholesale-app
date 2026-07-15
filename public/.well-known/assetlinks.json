@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.vercel.ggms_wholesale_app.twa",
+        "sha256_cert_fingerprints": ["8D:80:9B:D7:F5:60:BB:77:2B:BB:37:F1:B2:4D:FB:DE:1A:05:80:77:88:D0:2D:18:F3:52:A4:C7:58:B4:E4:5B"]
+      }
+}]
