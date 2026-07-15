@@ -97,10 +97,10 @@ export function PremiumDownloadCard({ downloadUrl, appUrl }: PremiumDownloadCard
             )}
 
             {downloadState === 'downloading' && (
-              <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-full px-2.5 h-8 min-w-[150px] shadow-sm">
-                <Loader2 size={12} className="animate-spin text-[#16A34A]" />
+              <div className="flex items-center gap-2.5 bg-white border border-slate-200 rounded-full px-3.5 h-9 min-w-[170px] shadow-sm">
+                <Loader2 size={13} className="animate-spin text-[#16A34A]" />
                 <div className="flex-1 flex flex-col justify-center">
-                  <div className="flex justify-between text-[8px] font-bold text-slate-500">
+                  <div className="flex justify-between text-[9px] sm:text-[10px] font-bold text-slate-500">
                     <span>Downloading...</span>
                     <span>{progress}%</span>
                   </div>
@@ -115,12 +115,12 @@ export function PremiumDownloadCard({ downloadUrl, appUrl }: PremiumDownloadCard
             )}
 
             {downloadState === 'completed' && (
-              <div className="flex items-center gap-1 bg-green-50 border border-green-200 rounded-full px-3 h-8 text-[#16A34A] font-bold text-[10px] sm:text-[11px] shadow-sm animate-pulse">
-                <CheckCircle2 size={13} />
+              <div className="flex items-center gap-1.5 bg-green-50 border border-green-200 rounded-full px-3.5 h-9 text-[#16A34A] font-bold text-xs sm:text-sm shadow-sm animate-pulse">
+                <CheckCircle2 size={14} />
                 <span>Download Started!</span>
                 <button 
                   onClick={handleDownloadClick}
-                  className="text-[8px] text-slate-400 hover:text-slate-600 underline ml-1.5"
+                  className="text-[9px] sm:text-xs text-slate-400 hover:text-slate-600 underline ml-1.5"
                 >
                   Retry
                 </button>
@@ -130,12 +130,12 @@ export function PremiumDownloadCard({ downloadUrl, appUrl }: PremiumDownloadCard
         </div>
 
         {/* Right Section: QR Code & Helper Text */}
-        <div className="flex flex-col items-center justify-center shrink-0">
+        <div className="hidden sm:flex flex-col items-center justify-center shrink-0">
           <div className="w-[72px] h-[72px] rounded-xl bg-white shadow-md border border-slate-100 flex items-center justify-center p-1.5 transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg">
             <QRCodeSVG value={appUrl} size={60} level="M" />
           </div>
-          <p className="text-[7.5px] sm:text-[8px] font-bold text-slate-400 text-center leading-tight max-w-[84px] mt-1.5">
-            QR scan કરો અથવા નીચે button દબાવો
+          <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 text-center leading-tight mt-1.5">
+            Scan QR
           </p>
         </div>
       </div>
