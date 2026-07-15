@@ -83,9 +83,6 @@ export function PremiumDownloadCard({ downloadUrl, appUrl }: PremiumDownloadCard
             <p className="text-slate-500 font-medium text-[8px] sm:text-[9.5px] md:text-xs leading-none whitespace-nowrap">
               Fast Delivery • Fresh Products • Best Prices
             </p>
-            <p className="text-slate-400 font-medium text-[8px] sm:text-[9px] leading-none">
-              QR scan કરો અથવા નીચે button દબાવો
-            </p>
           </div>
 
           <div className="flex items-center">
@@ -132,11 +129,14 @@ export function PremiumDownloadCard({ downloadUrl, appUrl }: PremiumDownloadCard
           </div>
         </div>
 
-        {/* Right Section: QR Code */}
-        <div className="flex justify-center items-center shrink-0">
+        {/* Right Section: QR Code & Helper Text */}
+        <div className="flex flex-col items-center justify-center shrink-0">
           <div className="w-[72px] h-[72px] rounded-xl bg-white shadow-md border border-slate-100 flex items-center justify-center p-1.5 transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg">
             <QRCodeSVG value={appUrl} size={60} level="M" />
           </div>
+          <p className="text-[7.5px] sm:text-[8px] font-bold text-slate-400 text-center leading-tight max-w-[84px] mt-1.5">
+            QR scan કરો અથવા નીચે button દબાવો
+          </p>
         </div>
       </div>
       
