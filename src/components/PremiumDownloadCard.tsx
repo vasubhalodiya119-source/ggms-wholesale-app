@@ -45,9 +45,9 @@ export function PremiumDownloadCard({ downloadUrl, appUrl }: PremiumDownloadCard
 
   return (
     <div 
-      className="relative overflow-hidden rounded-[20px] border border-amber-200/30 p-4 md:py-4 md:px-6 transition-all duration-300 min-h-[120px] flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6 hover:shadow-[0_8px_30px_rgba(255,220,80,0.25)]"
+      className="relative overflow-hidden rounded-[20px] border border-transparent p-4 md:py-4 md:px-6 transition-all duration-300 min-h-[120px] flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6 hover:shadow-[0_8px_30px_rgba(255,220,80,0.25)]"
       style={{
-        background: 'linear-gradient(to right, #FFFFFF 0%, #FFFDF3 25%, #FFF9D9 60%, #FFF6C2 100%)',
+        background: 'linear-gradient(to right, #FFFFFF 0%, #FFFDF3 25%, #FFF9D9 60%, #FFF6C2 100%) padding-box, linear-gradient(to right, #FFF6C2, #BBF7D0) border-box',
         boxShadow: '0 8px 30px rgba(255, 220, 80, 0.18)'
       }}
     >
