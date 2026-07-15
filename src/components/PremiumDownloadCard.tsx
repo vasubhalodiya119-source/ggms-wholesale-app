@@ -44,15 +44,15 @@ export function PremiumDownloadCard({ downloadUrl, appUrl }: PremiumDownloadCard
   }
 
   return (
-    <div className="relative overflow-hidden rounded-[20px] bg-gradient-to-r from-white to-[#FFF9D9] border border-green-100/50 p-6 shadow-[0_8px_30px_rgba(22,163,74,0.06)] transition-all duration-300 md:h-[140px] flex flex-col md:flex-row md:items-center md:justify-between gap-6 hover:shadow-[0_8px_30px_rgba(22,163,74,0.1)]">
+    <div className="relative overflow-hidden rounded-[20px] bg-gradient-to-r from-white to-[#FFF9D9] border border-green-100/50 p-6 shadow-[0_8px_30px_rgba(22,163,74,0.06)] transition-all duration-300 min-h-[140px] flex flex-col md:flex-row md:items-center md:justify-between gap-6 hover:shadow-[0_8px_30px_rgba(22,163,74,0.1)]">
       
       {/* Left Section: Text & Button */}
-      <div className="flex-1 flex flex-col justify-between h-full gap-4 md:gap-2">
+      <div className="flex-1 flex flex-col justify-center gap-3 md:gap-2">
         <div className="space-y-1">
           <h3 className="text-slate-800 font-extrabold text-base md:text-lg leading-tight tracking-tight">
             Download Our Grocery App
           </h3>
-          <p className="text-slate-500 font-medium text-xs md:text-sm leading-none">
+          <p className="text-slate-500 font-medium text-[10px] sm:text-xs md:text-sm leading-none whitespace-nowrap">
             Fast Delivery • Fresh Products • Best Prices
           </p>
           <p className="text-slate-400 font-medium text-[10px] md:text-xs">
