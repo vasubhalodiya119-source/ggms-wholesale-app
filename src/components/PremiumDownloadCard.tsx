@@ -44,7 +44,13 @@ export function PremiumDownloadCard({ downloadUrl, appUrl }: PremiumDownloadCard
   }
 
   return (
-    <div className="relative overflow-hidden rounded-[20px] bg-gradient-to-r from-white to-[#FFF9D9] border border-green-100/50 p-6 shadow-[0_8px_30px_rgba(22,163,74,0.06)] transition-all duration-300 min-h-[140px] flex flex-col md:flex-row md:items-center md:justify-between gap-6 hover:shadow-[0_8px_30px_rgba(22,163,74,0.1)]">
+    <div 
+      className="relative overflow-hidden rounded-[20px] border border-amber-200/30 p-6 transition-all duration-300 min-h-[140px] flex flex-col md:flex-row md:items-center md:justify-between gap-6 hover:shadow-[0_8px_30px_rgba(255,220,80,0.25)]"
+      style={{
+        background: 'linear-gradient(to right, #FFFFFF 0%, #FFFDF3 25%, #FFF9D9 60%, #FFF6C2 100%)',
+        boxShadow: '0 8px 30px rgba(255, 220, 80, 0.18)'
+      }}
+    >
       
       {/* Left Section: Text & Button */}
       <div className="flex-1 flex flex-col justify-center gap-3 md:gap-2">
