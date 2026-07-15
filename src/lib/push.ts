@@ -52,15 +52,10 @@ export async function subscribeToPush(shopId: string | null) {
 
 export async function triggerPush(payload: { title: string; body: string; url?: string; shop_id?: string }) {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    if (!supabaseUrl || !anonKey) return
-
-    await fetch(`${supabaseUrl}/functions/v1/send-push`, {
+    await fetch('/api/send-push', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${anonKey}`,
       },
       body: JSON.stringify(payload),
     })
