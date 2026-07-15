@@ -45,7 +45,7 @@ export function PremiumDownloadCard({ downloadUrl, appUrl }: PremiumDownloadCard
 
   return (
     <div 
-      className="relative overflow-hidden rounded-[20px] p-[1.5px] transition-all duration-300 min-h-[120px] flex hover:shadow-[0_8px_30px_rgba(255,220,80,0.25)]"
+      className="relative overflow-hidden rounded-[20px] p-[1.5px] transition-all duration-300 min-h-[110px] flex hover:shadow-[0_8px_30px_rgba(255,220,80,0.25)]"
       style={{
         boxShadow: '0 8px 30px rgba(255, 220, 80, 0.18)'
       }}
@@ -60,7 +60,7 @@ export function PremiumDownloadCard({ downloadUrl, appUrl }: PremiumDownloadCard
 
       {/* Rotating conic gradient behind the inner card */}
       <div 
-        className="absolute top-1/2 left-1/2 w-[250%] h-[250%] pointer-events-none"
+        className="absolute top-1/2 left-1/2 w-[300%] h-[300%] pointer-events-none"
         style={{
           background: 'conic-gradient(from 0deg, transparent 35%, #16A34A 50%, #BBF7D0 65%, #FFF6C2 80%, transparent 95%)',
           animation: 'border-spin 6s linear infinite'
@@ -69,21 +69,21 @@ export function PremiumDownloadCard({ downloadUrl, appUrl }: PremiumDownloadCard
 
       {/* Inner Content Card */}
       <div 
-        className="relative z-10 w-full rounded-[19px] p-4 md:py-4 md:px-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6 min-h-[117px]"
+        className="relative z-10 w-full rounded-[19px] p-3.5 sm:p-4 flex flex-row items-center justify-between gap-3 min-h-[107px]"
         style={{
           background: 'linear-gradient(to right, #FFFFFF 0%, #FFFDF3 25%, #FFF9D9 60%, #FFF6C2 100%)'
         }}
       >
         {/* Left Section: Text & Button */}
-        <div className="flex-1 flex flex-col justify-center gap-2">
+        <div className="flex-1 min-w-0 flex flex-col justify-center gap-2">
           <div className="space-y-0.5">
-            <h3 className="text-slate-800 font-extrabold text-sm md:text-[15px] leading-tight tracking-tight">
+            <h3 className="text-slate-800 font-extrabold text-xs sm:text-sm md:text-[15px] leading-tight tracking-tight">
               Download Our Grocery App
             </h3>
-            <p className="text-slate-500 font-medium text-[9px] sm:text-[10px] md:text-xs leading-none whitespace-nowrap">
+            <p className="text-slate-500 font-medium text-[8px] sm:text-[9.5px] md:text-xs leading-none whitespace-nowrap">
               Fast Delivery • Fresh Products • Best Prices
             </p>
-            <p className="text-slate-400 font-medium text-[9px] md:text-[10px]">
+            <p className="text-slate-400 font-medium text-[8px] sm:text-[9px] leading-none">
               QR scan કરો અથવા નીચે button દબાવો
             </p>
           </div>
@@ -92,18 +92,18 @@ export function PremiumDownloadCard({ downloadUrl, appUrl }: PremiumDownloadCard
             {downloadState === 'idle' && (
               <button
                 onClick={handleDownloadClick}
-                className="flex items-center justify-center gap-1.5 bg-[#16A34A] hover:bg-green-700 text-white font-bold text-[11px] md:text-xs px-4 h-8 md:h-9 rounded-full transition-all duration-200 transform hover:scale-[1.03] active:scale-[0.98] shadow-sm shadow-green-600/10"
+                className="flex items-center justify-center gap-1 bg-[#16A34A] hover:bg-green-700 text-white font-bold text-[10px] sm:text-[11px] px-3.5 h-8 rounded-full transition-all duration-200 transform hover:scale-[1.03] active:scale-[0.98] shadow-sm shadow-green-600/10"
               >
-                <Download size={14} className="animate-bounce" />
+                <Download size={13} className="animate-bounce" />
                 <span>Download APK Now</span>
               </button>
             )}
 
             {downloadState === 'downloading' && (
-              <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-full px-3 h-8 md:h-9 min-w-[180px] shadow-sm">
-                <Loader2 size={13} className="animate-spin text-[#16A34A]" />
+              <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-full px-2.5 h-8 min-w-[150px] shadow-sm">
+                <Loader2 size={12} className="animate-spin text-[#16A34A]" />
                 <div className="flex-1 flex flex-col justify-center">
-                  <div className="flex justify-between text-[9px] font-bold text-slate-500">
+                  <div className="flex justify-between text-[8px] font-bold text-slate-500">
                     <span>Downloading...</span>
                     <span>{progress}%</span>
                   </div>
@@ -118,12 +118,12 @@ export function PremiumDownloadCard({ downloadUrl, appUrl }: PremiumDownloadCard
             )}
 
             {downloadState === 'completed' && (
-              <div className="flex items-center gap-1.5 bg-green-50 border border-green-200 rounded-full px-4 h-8 md:h-9 text-[#16A34A] font-bold text-[11px] md:text-xs shadow-sm animate-pulse">
-                <CheckCircle2 size={14} />
+              <div className="flex items-center gap-1 bg-green-50 border border-green-200 rounded-full px-3 h-8 text-[#16A34A] font-bold text-[10px] sm:text-[11px] shadow-sm animate-pulse">
+                <CheckCircle2 size={13} />
                 <span>Download Started!</span>
                 <button 
                   onClick={handleDownloadClick}
-                  className="text-[9px] text-slate-400 hover:text-slate-600 underline ml-1.5"
+                  className="text-[8px] text-slate-400 hover:text-slate-600 underline ml-1.5"
                 >
                   Retry
                 </button>
@@ -133,9 +133,9 @@ export function PremiumDownloadCard({ downloadUrl, appUrl }: PremiumDownloadCard
         </div>
 
         {/* Right Section: QR Code */}
-        <div className="flex justify-center items-center shrink-0 md:mr-6">
-          <div className="w-[84px] h-[84px] rounded-2xl bg-white shadow-md border border-slate-100 flex items-center justify-center p-1.5 transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg">
-            <QRCodeSVG value={appUrl} size={70} level="M" />
+        <div className="flex justify-center items-center shrink-0">
+          <div className="w-[72px] h-[72px] rounded-xl bg-white shadow-md border border-slate-100 flex items-center justify-center p-1.5 transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg">
+            <QRCodeSVG value={appUrl} size={60} level="M" />
           </div>
         </div>
       </div>
