@@ -83,7 +83,19 @@ function SignupContent() {
           📌 લોગિન કરવા માટે તમારે "ફોન નંબર" અને "તમારું નામ" બંને યાદ રાખવા - આ જ login details છે.
         </p>
 
-        {error && <p className="text-red-600 text-xs font-semibold px-1">{error}</p>}
+        {error && (
+          <div className="flex flex-col gap-2">
+            <p className="text-red-600 text-xs font-semibold px-1">{error}</p>
+            {error.includes('પહેલેથી રજીસ્ટર') && (
+              <Link
+                href={`/login?redirect=${redirect}`}
+                className="bg-amber-100 text-amber-800 text-sm font-bold py-2.5 px-4 rounded-xl text-center"
+              >
+                અહીં ક્લિક કરીને લોગીન કરો
+              </Link>
+            )}
+          </div>
+        )}
 
         <button
           type="submit"
