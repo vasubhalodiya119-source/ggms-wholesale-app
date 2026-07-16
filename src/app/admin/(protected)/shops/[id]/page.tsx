@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, ArrowUp, ArrowDown, Plus } from 'lucide-react'
+import { ArrowLeft, ArrowUp, ArrowDown, Plus, Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { Shop, Order } from '@/lib/types'
 
@@ -23,6 +23,7 @@ export default function AdminShopLedgerPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [showPaymentForm, setShowPaymentForm] = useState(false)
   const [paymentAmount, setPaymentAmount] = useState('')
+  const [isDeleting, setIsDeleting] = useState(false)
 
   async function load() {
     const { data: s } = await supabase.from('shops').select('*').eq('id', shopId).single()
@@ -70,6 +71,29 @@ export default function AdminShopLedgerPage() {
     load()
   }
 
+  async function deleteShop() {
+    if (!shop) return
+    const confirmed = window.confirm(
+      `શું તમે ખરેખર '${shop.shop_name}' ને ડીલીટ કરવા માંગો છો?\nઆ એકાઉન્ટનો બધો જ ડેટા કાયમ માટે ડીલીટ થઈ જશે.`
+    )
+    if (!confirmed) return
+
+    setIsDeleting(true)
+    try {
+      // Delete the shop (Cascading will handle orders and ledger if configured, or it will throw an error)
+      const { error } = await supabase.from('shops').delete().eq('id', shop.id)
+      if (error) throw error
+      
+      alert('Shop deleted successfully!')
+      router.push('/admin/shops')
+    } catch (error) {
+      const err = error as Error
+      console.error(err)
+      alert(`Error deleting shop: ${err.message || 'It may have existing orders. Contact admin to cascade delete.'}`)
+      setIsDeleting(false)
+    }
+  }
+
   if (!shop) return <div className="p-6 text-sm text-slate-400">Loading...</div>
 
   return (
@@ -79,8 +103,20 @@ export default function AdminShopLedgerPage() {
       </button>
 
       <div className="bg-white rounded-2xl border border-slate-200 p-5">
-        <h1 className="text-lg font-extrabold text-slate-900">{shop.shop_name}</h1>
-        <p className="text-sm text-slate-500">{shop.owner_name} • {shop.phone}</p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-lg font-extrabold text-slate-900">{shop.shop_name}</h1>
+            <p className="text-sm text-slate-500">{shop.owner_name} • {shop.phone}</p>
+          </div>
+          <button 
+            onClick={deleteShop} 
+            disabled={isDeleting}
+            className="text-red-500 bg-red-50 hover:bg-red-100 p-2 rounded-xl transition-colors disabled:opacity-50"
+            title="Delete Shop"
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
         {shop.address && <p className="text-xs text-slate-400 mt-1">{shop.address}</p>}
 
         <div className="grid grid-cols-2 gap-3 mt-4">
