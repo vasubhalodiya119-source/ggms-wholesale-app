@@ -13,14 +13,18 @@ function urlBase64ToUint8Array(base64String: string) {
 
 export async function subscribeToPush(shopId: string | null) {
   if (typeof window === 'undefined') return
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
+  if (!('serviceWorker' in navigator)) { alert('No serviceWorker in navigator'); return; }
+  if (!('PushManager' in window)) { alert('No PushManager in window - Your app/browser does not support Web Push'); return; }
 
   const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-  if (!vapidPublicKey) return
+  if (!vapidPublicKey) { alert('No VAPID Key found in environment!'); return; }
 
   try {
     const permission = await Notification.requestPermission()
-    if (permission !== 'granted') return
+    if (permission !== 'granted') {
+      alert('Notification Permission is: ' + permission + '. Please allow notifications in settings.');
+      return;
+    }
 
     const registration = await navigator.serviceWorker.ready
 
@@ -48,7 +52,6 @@ export async function subscribeToPush(shopId: string | null) {
 
       if (!match) {
         await subscription.unsubscribe()
-        // Also optionally delete the old one from supabase if we had its endpoint, but it'll fail later and be cleaned up anyway.
         subscription = null
       }
     }
@@ -61,9 +64,12 @@ export async function subscribeToPush(shopId: string | null) {
     }
 
     const subJson = subscription.toJSON()
-    if (!subJson.endpoint || !subJson.keys?.p256dh || !subJson.keys?.auth) return
+    if (!subJson.endpoint || !subJson.keys?.p256dh || !subJson.keys?.auth) {
+      alert('Subscription missing keys');
+      return;
+    }
 
-    await supabase.from('push_subscriptions').upsert(
+    const { error } = await supabase.from('push_subscriptions').upsert(
       {
         shop_id: shopId,
         endpoint: subJson.endpoint,
@@ -72,8 +78,13 @@ export async function subscribeToPush(shopId: string | null) {
       },
       { onConflict: 'endpoint' }
     )
-  } catch (err) {
-    // silent fail — push is a nice-to-have, not critical path
+    if (error) {
+      alert('Supabase Error: ' + error.message);
+    } else {
+      alert('SUCCESS! Push subscription registered to backend.');
+    }
+  } catch (err: any) {
+    alert('Push Error: ' + err.message);
     console.error('Push subscribe failed', err)
   }
 }
