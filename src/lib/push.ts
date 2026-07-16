@@ -13,18 +13,14 @@ function urlBase64ToUint8Array(base64String: string) {
 
 export async function subscribeToPush(shopId: string | null) {
   if (typeof window === 'undefined') return
-  if (!('serviceWorker' in navigator)) { alert('No serviceWorker in navigator'); return; }
-  if (!('PushManager' in window)) { alert('No PushManager in window - Your app/browser does not support Web Push'); return; }
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
 
   const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-  if (!vapidPublicKey) { alert('No VAPID Key found in environment!'); return; }
+  if (!vapidPublicKey) return
 
   try {
     const permission = await Notification.requestPermission()
-    if (permission !== 'granted') {
-      alert('Notification Permission is: ' + permission + '. Please allow notifications in settings.');
-      return;
-    }
+    if (permission !== 'granted') return
 
     const registration = await navigator.serviceWorker.ready
 
@@ -64,12 +60,9 @@ export async function subscribeToPush(shopId: string | null) {
     }
 
     const subJson = subscription.toJSON()
-    if (!subJson.endpoint || !subJson.keys?.p256dh || !subJson.keys?.auth) {
-      alert('Subscription missing keys');
-      return;
-    }
+    if (!subJson.endpoint || !subJson.keys?.p256dh || !subJson.keys?.auth) return
 
-    const { error } = await supabase.from('push_subscriptions').upsert(
+    await supabase.from('push_subscriptions').upsert(
       {
         shop_id: shopId,
         endpoint: subJson.endpoint,
@@ -78,13 +71,7 @@ export async function subscribeToPush(shopId: string | null) {
       },
       { onConflict: 'endpoint' }
     )
-    if (error) {
-      alert('Supabase Error: ' + error.message);
-    } else {
-      alert('SUCCESS! Push subscription registered to backend.');
-    }
-  } catch (err: any) {
-    alert('Push Error: ' + err.message);
+  } catch (err) {
     console.error('Push subscribe failed', err)
   }
 }
