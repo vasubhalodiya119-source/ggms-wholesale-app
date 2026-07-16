@@ -12,8 +12,20 @@ type PremiumDownloadCardProps = {
 export function PremiumDownloadCard({ downloadUrl, appUrl }: PremiumDownloadCardProps) {
   const [downloadState, setDownloadState] = useState<'idle' | 'downloading' | 'completed'>('idle')
   const [progress, setProgress] = useState(0)
+  const [isInstalledApp, setIsInstalledApp] = useState(false)
 
   const finalDownloadUrl = downloadUrl || `${appUrl}/GGMS-Wholesale.apk`
+
+  // Detect if running as installed app (PWA / TWA)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+      const isTWA = document.referrer.includes('android-app://')
+      if (isStandalone || isTWA) {
+        setIsInstalledApp(true)
+      }
+    }
+  }, [])
 
   // Handle fake download progress animation
   useEffect(() => {
@@ -42,6 +54,8 @@ export function PremiumDownloadCard({ downloadUrl, appUrl }: PremiumDownloadCard
     setProgress(0)
     setDownloadState('downloading')
   }
+
+  if (isInstalledApp) return null
 
   return (
     <div 
