@@ -33,6 +33,31 @@ async function subscribeAdminToPush(adminId: string) {
     if (permission !== 'granted') return
     const reg = await navigator.serviceWorker.ready
     let sub = await reg.pushManager.getSubscription()
+    if (sub) {
+      const currentKey = sub.options?.applicationServerKey
+      const expectedKey = urlBase64ToUint8Array(vapidKey)
+      let match = true
+      if (currentKey && expectedKey) {
+        const currentArray = new Uint8Array(currentKey)
+        if (currentArray.length !== expectedKey.length) {
+          match = false
+        } else {
+          for (let i = 0; i < currentArray.length; i++) {
+            if (currentArray[i] !== expectedKey[i]) {
+              match = false
+              break
+            }
+          }
+        }
+      } else {
+        match = false
+      }
+      if (!match) {
+        await sub.unsubscribe()
+        sub = null
+      }
+    }
+    
     if (!sub) {
       sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,

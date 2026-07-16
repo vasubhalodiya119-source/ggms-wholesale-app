@@ -25,6 +25,34 @@ export async function subscribeToPush(shopId: string | null) {
     const registration = await navigator.serviceWorker.ready
 
     let subscription = await registration.pushManager.getSubscription()
+
+    if (subscription) {
+      const currentKey = subscription.options?.applicationServerKey
+      const expectedKey = urlBase64ToUint8Array(vapidPublicKey)
+      let match = true
+      if (currentKey && expectedKey) {
+        const currentArray = new Uint8Array(currentKey)
+        if (currentArray.length !== expectedKey.length) {
+          match = false
+        } else {
+          for (let i = 0; i < currentArray.length; i++) {
+            if (currentArray[i] !== expectedKey[i]) {
+              match = false
+              break
+            }
+          }
+        }
+      } else {
+        match = false
+      }
+
+      if (!match) {
+        await subscription.unsubscribe()
+        // Also optionally delete the old one from supabase if we had its endpoint, but it'll fail later and be cleaned up anyway.
+        subscription = null
+      }
+    }
+
     if (!subscription) {
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
