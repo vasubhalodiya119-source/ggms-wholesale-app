@@ -25,7 +25,7 @@ self.addEventListener('fetch', (event) => {
 
 // Push notification handler
 self.addEventListener('push', (event) => {
-  let data = { title: 'GGM&S Wholesale', body: 'નવું notification', url: '/', requireInteraction: false, tag: 'default' };
+  let data = { title: 'GGM&S Wholesale', body: 'નવું notification', url: '/', requireInteraction: false, tag: Date.now().toString() };
   try {
     if (event.data) data = { ...data, ...event.data.json() };
   } catch (e) {
@@ -34,29 +34,26 @@ self.addEventListener('push', (event) => {
 
   const isNewOrder = data.tag === 'new-order';
 
-  // Play sound via open clients (if app is open)
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Post message to client to play sound
+  const showNotifPromise = self.registration.showNotification(data.title || 'GGM&S Wholesale', {
+    body: data.body || '',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
+    data: { url: data.url || '/' },
+    vibrate: isNewOrder ? [400, 100, 400, 100, 400, 100, 600] : [200, 100, 200],
+    requireInteraction: isNewOrder,
+    tag: data.tag || Date.now().toString(),
+    renotify: true,
+    silent: false,
+  }).catch(err => console.error('Error showing notification:', err));
+
+  const playSoundPromise = clients.matchAll({ type: 'window', includeUncontrolled: true })
+    .then((clientList) => {
       for (const client of clientList) {
         client.postMessage({ type: 'PLAY_NOTIFICATION_SOUND', isNewOrder });
       }
-    }).then(() =>
-      self.registration.showNotification(data.title, {
-        body: data.body,
-        icon: '/icons/icon-192.png',
-        badge: '/icons/icon-192.png',
-        data: { url: data.url || '/' },
-        vibrate: isNewOrder
-          ? [400, 100, 400, 100, 400, 100, 600]
-          : [200, 100, 200],
-        requireInteraction: isNewOrder,
-        tag: data.tag || 'default',
-        renotify: true,
-        silent: false,
-      })
-    )
-  );
+    }).catch(err => console.error('Error matching clients:', err));
+
+  event.waitUntil(Promise.all([showNotifPromise, playSoundPromise]));
 });
 
 // Notification click - open the correct page
