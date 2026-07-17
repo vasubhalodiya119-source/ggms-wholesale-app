@@ -7,3 +7,13 @@ npm-debug.log*
 *.tsbuildinfo
 .vercel
 .env*
+
+# IDEs and local env folders
+.idea/
+.android_home/
+.gradle_home/
+.artifacts/
+
+# Build artifacts
+*.apk
+*.zip

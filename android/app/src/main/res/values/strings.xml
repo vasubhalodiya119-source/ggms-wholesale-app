@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">GGM&amp;S Wholesale</string>
+    <string name="title_activity_main">GGM&amp;S Wholesale</string>
+    <string name="package_name">com.ggms.wholesale</string>
+    <string name="custom_url_scheme">com.ggms.wholesale</string>
+</resources>
