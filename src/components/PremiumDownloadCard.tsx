@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { Download, Loader2, CheckCircle2 } from 'lucide-react'
+import { Capacitor } from '@capacitor/core'
 
 type PremiumDownloadCardProps = {
   downloadUrl: string | null
@@ -21,7 +22,7 @@ export function PremiumDownloadCard({ downloadUrl, appUrl }: PremiumDownloadCard
     if (typeof window !== 'undefined') {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches
       const isTWA = document.referrer.includes('android-app://')
-      const isCapacitor = !!(window as any).Capacitor
+      const isCapacitor = Capacitor.isNativePlatform()
       
       if (isStandalone || isTWA || isCapacitor) {
         setIsInstalledApp(true)
