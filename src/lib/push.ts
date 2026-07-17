@@ -14,6 +14,23 @@ function urlBase64ToUint8Array(base64String: string) {
 import { Capacitor } from '@capacitor/core'
 import { PushNotifications } from '@capacitor/push-notifications'
 
+export async function getPushPermissionStatus(): Promise<'granted' | 'denied' | 'prompt'> {
+  if (typeof window === 'undefined') return 'denied';
+
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const perm = await PushNotifications.checkPermissions();
+      return perm.receive === 'prompt-with-rationale' ? 'prompt' : perm.receive;
+    } catch (e) {
+      return 'denied';
+    }
+  } else {
+    if (!('Notification' in window)) return 'denied';
+    if (Notification.permission === 'default') return 'prompt';
+    return Notification.permission as 'granted' | 'denied';
+  }
+}
+
 export async function subscribeToPush(shopId: string | null) {
   if (typeof window === 'undefined') return
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useShopAuth } from '@/lib/shop-auth'
-import { subscribeToPush } from '@/lib/push'
+import { subscribeToPush, getPushPermissionStatus } from '@/lib/push'
 import { Bell } from 'lucide-react'
 
 export default function NotificationPrompt() {
@@ -11,20 +11,24 @@ export default function NotificationPrompt() {
 
   useEffect(() => {
     // Only run on client
-    if (typeof window === 'undefined' || !('Notification' in window)) return
+    if (typeof window === 'undefined') return
 
-    // If already granted or denied, don't show
-    if (Notification.permission !== 'default') return
-    
     // Check if user previously declined the custom prompt
     if (localStorage.getItem('ggms_push_declined') === 'true') return
 
-    // Show if they are logged in
-    if (shop) {
-      // Small delay so it doesn't pop up immediately on first render
-      const timer = setTimeout(() => setShow(true), 1500)
-      return () => clearTimeout(timer)
+    const checkPerms = async () => {
+      const status = await getPushPermissionStatus()
+      if (status !== 'prompt') return
+
+      // Show if they are logged in
+      if (shop) {
+        // Small delay so it doesn't pop up immediately on first render
+        const timer = setTimeout(() => setShow(true), 1500)
+        return () => clearTimeout(timer)
+      }
     }
+    
+    checkPerms()
   }, [shop])
 
   if (!show) return null
