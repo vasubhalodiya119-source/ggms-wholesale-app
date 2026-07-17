@@ -28,7 +28,9 @@ export function ShopAuthProvider({ children }: { children: ReactNode }) {
       supabase.from('shops').select('*').eq('id', savedId).single().then(({ data }) => {
         if (data) {
           setShop(data as Shop)
-          subscribeToPush(data.id)
+          if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+            subscribeToPush(data.id)
+          }
         }
         setLoading(false)
       })
@@ -53,7 +55,9 @@ export function ShopAuthProvider({ children }: { children: ReactNode }) {
 
     setShop(data as Shop)
     localStorage.setItem(STORAGE_KEY, data.id)
-    subscribeToPush(data.id)
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      subscribeToPush(data.id)
+    }
     return { error: null }
   }
 
@@ -81,7 +85,9 @@ export function ShopAuthProvider({ children }: { children: ReactNode }) {
 
     setShop(data as Shop)
     localStorage.setItem(STORAGE_KEY, data.id)
-    subscribeToPush(data.id)
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      subscribeToPush(data.id)
+    }
     return { error: null }
   }
 

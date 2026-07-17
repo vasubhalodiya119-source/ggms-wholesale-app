@@ -1,5 +1,6 @@
 import StoreHeader from '@/components/StoreHeader'
 import BottomNav from '@/components/BottomNav'
+import NotificationPrompt from '@/components/NotificationPrompt'
 
 export default function StoreLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -7,6 +8,7 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
       <StoreHeader />
       <main className="flex-1 overflow-y-auto pb-4">{children}</main>
       <BottomNav />
+      <NotificationPrompt />
     </div>
   )
 }
