@@ -39,7 +39,7 @@ export async function subscribeToPush(shopId: string | null) {
     // NATIVE (ANDROID/IOS) PUSH
     // ----------------------------
     let permStatus = await PushNotifications.checkPermissions();
-    if (permStatus.receive === 'prompt') {
+    if (permStatus.receive === 'prompt' || permStatus.receive === 'prompt-with-rationale') {
       permStatus = await PushNotifications.requestPermissions();
     }
     if (permStatus.receive !== 'granted') {

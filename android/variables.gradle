@@ -17,4 +17,5 @@ ext {
     releaseStorePassword = 'ggms1234'
     releaseKeyAlias = 'ggms-alias'
     releaseKeyPassword = 'ggms1234'
+    firebaseMessagingVersion = '23.4.0'
 }
