@@ -13,6 +13,43 @@ webpush.setVapidDetails(
   process.env.VAPID_PRIVATE_KEY || ''
 )
 
+// Lazy-init firebase-admin from environment variable
+let firebaseAdmin: any = null
+
+function getFirebaseAdmin() {
+  if (firebaseAdmin) return firebaseAdmin
+
+  try {
+    const admin = require('firebase-admin')
+    if (!admin.apps.length) {
+      // Try env var first (for Vercel / production), then fall back to local file
+      const envJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON
+      let serviceAccount: any
+
+      if (envJson) {
+        serviceAccount = JSON.parse(envJson)
+      } else {
+        // Fallback: try loading from file (local development)
+        try {
+          serviceAccount = require('../../../../firebase-service-account.json')
+        } catch {
+          console.error('Firebase service account not found in env var or file. FCM push will not work.')
+          return null
+        }
+      }
+
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+      })
+    }
+    firebaseAdmin = admin
+    return admin
+  } catch (e) {
+    console.error('Failed to initialize firebase-admin:', e)
+    return null
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const payload = await req.json()
@@ -40,19 +77,20 @@ export async function POST(req: Request) {
       url: url || '/',
     })
 
+    let successCount = 0
+    let failCount = 0
+
     const sendPromises = subscriptions.map(async (sub) => {
       if (sub.auth === 'fcm') {
         // Native Push via FCM
-        try {
-          // Dynamic import to avoid client-side bundling issues if any
-          const admin = require('firebase-admin');
-          if (!admin.apps.length) {
-            const serviceAccount = require('../../../../firebase-service-account.json');
-            admin.initializeApp({
-              credential: admin.credential.cert(serviceAccount)
-            });
-          }
+        const admin = getFirebaseAdmin()
+        if (!admin) {
+          console.error('Firebase admin not initialized, skipping FCM push to:', sub.endpoint?.substring(0, 20))
+          failCount++
+          return
+        }
 
+        try {
           await admin.messaging().send({
             token: sub.endpoint, // We stored FCM token in endpoint
             notification: {
@@ -67,12 +105,14 @@ export async function POST(req: Request) {
                 sound: 'default'
               }
             }
-          });
-          console.log('FCM push sent successfully to', sub.endpoint);
+          })
+          console.log('FCM push sent successfully to', sub.endpoint?.substring(0, 20) + '...')
+          successCount++
         } catch (e: any) {
-          console.error('Error sending FCM push:', e);
+          console.error('Error sending FCM push:', e?.message || e)
+          failCount++
           if (e.code === 'messaging/invalid-registration-token' || e.code === 'messaging/registration-token-not-registered') {
-            console.log('FCM token invalid, deleting...', sub.endpoint)
+            console.log('FCM token invalid, deleting...', sub.endpoint?.substring(0, 20))
             await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
           }
         }
@@ -85,24 +125,33 @@ export async function POST(req: Request) {
             auth: sub.auth,
           },
         }
-        return webpush.sendNotification(pushSubscription, notificationPayload).catch(async (e) => {
+        return webpush.sendNotification(pushSubscription, notificationPayload).then(() => {
+          successCount++
+        }).catch(async (e) => {
           // If subscription is invalid/expired, remove it
           if (e.statusCode === 410 || e.statusCode === 404) {
-            console.log('WebPush subscription expired or invalid, deleting...', sub.endpoint)
+            console.log('WebPush subscription expired or invalid, deleting...', sub.endpoint?.substring(0, 20))
             await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
           } else {
-            console.error('Error sending Web push:', e)
+            console.error('Error sending Web push:', e?.message || e)
           }
+          failCount++
         })
       }
     })
 
     await Promise.all(sendPromises)
 
-    return NextResponse.json({ success: true, count: subscriptions.length })
+    return NextResponse.json({ 
+      success: true, 
+      total: subscriptions.length,
+      sent: successCount,
+      failed: failCount
+    })
   } catch (error) {
     const e = error as Error
     console.error('Error in send-push API:', e)
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }
+
