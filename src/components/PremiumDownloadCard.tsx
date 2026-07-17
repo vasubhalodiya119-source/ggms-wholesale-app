@@ -16,12 +16,14 @@ export function PremiumDownloadCard({ downloadUrl, appUrl }: PremiumDownloadCard
 
   const finalDownloadUrl = downloadUrl || `${appUrl}/GGMS-Wholesale.apk`
 
-  // Detect if running as installed app (PWA / TWA)
+  // Detect if running as installed app (PWA / TWA / Capacitor)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches
       const isTWA = document.referrer.includes('android-app://')
-      if (isStandalone || isTWA) {
+      const isCapacitor = !!(window as any).Capacitor
+      
+      if (isStandalone || isTWA || isCapacitor) {
         setIsInstalledApp(true)
       }
     }
