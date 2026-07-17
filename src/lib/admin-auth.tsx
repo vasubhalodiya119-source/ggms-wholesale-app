@@ -23,55 +23,76 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray
 }
 
+import { Capacitor } from '@capacitor/core'
+import { PushNotifications } from '@capacitor/push-notifications'
+
 async function subscribeAdminToPush(adminId: string) {
   if (typeof window === 'undefined') return
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
-  const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-  if (!vapidKey) return
-  try {
-    const permission = await Notification.requestPermission()
-    if (permission !== 'granted') return
-    const reg = await navigator.serviceWorker.ready
-    let sub = await reg.pushManager.getSubscription()
-    if (sub) {
-      const currentKey = sub.options?.applicationServerKey
-      const expectedKey = urlBase64ToUint8Array(vapidKey)
-      let match = true
-      if (currentKey && expectedKey) {
-        const currentArray = new Uint8Array(currentKey)
-        if (currentArray.length !== expectedKey.length) {
-          match = false
-        } else {
-          for (let i = 0; i < currentArray.length; i++) {
-            if (currentArray[i] !== expectedKey[i]) {
-              match = false
-              break
+
+  if (Capacitor.isNativePlatform()) {
+    let permStatus = await PushNotifications.checkPermissions();
+    if (permStatus.receive === 'prompt') {
+      permStatus = await PushNotifications.requestPermissions();
+    }
+    if (permStatus.receive !== 'granted') return;
+
+    await PushNotifications.register();
+
+    PushNotifications.addListener('registration', async (token) => {
+      await supabase.from('admin_push_subscriptions').upsert(
+        { admin_id: adminId, endpoint: token.value, p256dh: null, auth: 'fcm' },
+        { onConflict: 'endpoint' }
+      )
+    });
+  } else {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
+    const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+    if (!vapidKey) return
+    try {
+      const permission = await Notification.requestPermission()
+      if (permission !== 'granted') return
+      const reg = await navigator.serviceWorker.ready
+      let sub = await reg.pushManager.getSubscription()
+      if (sub) {
+        const currentKey = sub.options?.applicationServerKey
+        const expectedKey = urlBase64ToUint8Array(vapidKey)
+        let match = true
+        if (currentKey && expectedKey) {
+          const currentArray = new Uint8Array(currentKey)
+          if (currentArray.length !== expectedKey.length) {
+            match = false
+          } else {
+            for (let i = 0; i < currentArray.length; i++) {
+              if (currentArray[i] !== expectedKey[i]) {
+                match = false
+                break
+              }
             }
           }
+        } else {
+          match = false
         }
-      } else {
-        match = false
+        if (!match) {
+          await sub.unsubscribe()
+          sub = null
+        }
       }
-      if (!match) {
-        await sub.unsubscribe()
-        sub = null
+      
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidKey),
+        })
       }
+      const subJson = sub.toJSON()
+      if (!subJson.endpoint || !subJson.keys?.p256dh || !subJson.keys?.auth) return
+      await supabase.from('admin_push_subscriptions').upsert(
+        { admin_id: adminId, endpoint: subJson.endpoint, p256dh: subJson.keys.p256dh, auth: subJson.keys.auth },
+        { onConflict: 'endpoint' }
+      )
+    } catch (err) {
+      console.error('Admin push subscribe failed', err)
     }
-    
-    if (!sub) {
-      sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidKey),
-      })
-    }
-    const subJson = sub.toJSON()
-    if (!subJson.endpoint || !subJson.keys?.p256dh || !subJson.keys?.auth) return
-    await supabase.from('admin_push_subscriptions').upsert(
-      { admin_id: adminId, endpoint: subJson.endpoint, p256dh: subJson.keys.p256dh, auth: subJson.keys.auth },
-      { onConflict: 'endpoint' }
-    )
-  } catch (err) {
-    console.error('Admin push subscribe failed', err)
   }
 }
 

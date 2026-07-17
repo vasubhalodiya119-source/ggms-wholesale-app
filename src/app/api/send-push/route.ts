@@ -40,22 +40,61 @@ export async function POST(req: Request) {
       url: url || '/',
     })
 
-    const sendPromises = subscriptions.map((sub) => {
-      const pushSubscription = {
-        endpoint: sub.endpoint,
-        keys: {
-          p256dh: sub.p256dh,
-          auth: sub.auth,
-        },
-      }
-      return webpush.sendNotification(pushSubscription, notificationPayload).catch((e) => {
-        // If subscription is invalid/expired, remove it
-        if (e.statusCode === 410 || e.statusCode === 404) {
-          console.log('Subscription expired or invalid, deleting...', sub.endpoint)
-          return supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
+    const sendPromises = subscriptions.map(async (sub) => {
+      if (sub.auth === 'fcm') {
+        // Native Push via FCM
+        try {
+          // Dynamic import to avoid client-side bundling issues if any
+          const admin = require('firebase-admin');
+          if (!admin.apps.length) {
+            const serviceAccount = require('../../../../firebase-service-account.json');
+            admin.initializeApp({
+              credential: admin.credential.cert(serviceAccount)
+            });
+          }
+
+          await admin.messaging().send({
+            token: sub.endpoint, // We stored FCM token in endpoint
+            notification: {
+              title: title || 'Notification',
+              body: body || ''
+            },
+            data: {
+              url: url || '/'
+            },
+            android: {
+              notification: {
+                sound: 'default'
+              }
+            }
+          });
+          console.log('FCM push sent successfully to', sub.endpoint);
+        } catch (e: any) {
+          console.error('Error sending FCM push:', e);
+          if (e.code === 'messaging/invalid-registration-token' || e.code === 'messaging/registration-token-not-registered') {
+            console.log('FCM token invalid, deleting...', sub.endpoint)
+            await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
+          }
         }
-        console.error('Error sending push:', e)
-      })
+      } else {
+        // Web Push
+        const pushSubscription = {
+          endpoint: sub.endpoint,
+          keys: {
+            p256dh: sub.p256dh,
+            auth: sub.auth,
+          },
+        }
+        return webpush.sendNotification(pushSubscription, notificationPayload).catch(async (e) => {
+          // If subscription is invalid/expired, remove it
+          if (e.statusCode === 410 || e.statusCode === 404) {
+            console.log('WebPush subscription expired or invalid, deleting...', sub.endpoint)
+            await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
+          } else {
+            console.error('Error sending Web push:', e)
+          }
+        })
+      }
     })
 
     await Promise.all(sendPromises)
