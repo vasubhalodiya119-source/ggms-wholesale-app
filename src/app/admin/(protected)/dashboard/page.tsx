@@ -87,6 +87,31 @@ function DashboardContent() {
     load()
 
     // Realtime: navo order aave tyare home screen par popup
+    // Realtime: navo order aave tyare home screen par popup
+    const playNotificationSound = () => {
+      try {
+        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext
+        if (!AudioCtx) return
+        const ctx = new AudioCtx()
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        
+        osc.type = 'sine'
+        // Play a pleasant double chime (bell sound)
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime) // D5
+        gain.gain.setValueAtTime(0.15, ctx.currentTime)
+        osc.start()
+        
+        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12) // A5
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5)
+        osc.stop(ctx.currentTime + 0.6)
+      } catch (e) {
+        console.error('Failed to play notification sound:', e)
+      }
+    }
+
     const channel = supabase
       .channel('admin-new-orders')
       .on(
@@ -96,6 +121,10 @@ function DashboardContent() {
           const order = payload.new as Order
           const { data: items } = await supabase.from('order_items').select('*').eq('order_id', order.id)
           setNewOrderAlert({ order, items: (items as OrderItem[]) || [] })
+          
+          // Play sound alert
+          playNotificationSound()
+          
           // browser notification (if permitted)
           if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
             new Notification('નવો ઓર્ડર! 🛍️', { body: `${order.shop_name_snapshot} - ₹${order.total_amount}` })
