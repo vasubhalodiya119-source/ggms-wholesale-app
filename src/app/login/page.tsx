@@ -29,7 +29,10 @@ function LoginContent() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 sm:max-w-md sm:mx-auto w-full">
-      <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-sm mb-4">
+      <div 
+        className="w-20 h-20 rounded-2xl overflow-hidden shadow-sm mb-4 cursor-pointer"
+        onDoubleClick={() => router.push('/admin')}
+      >
         <Image src="/logo.png" alt="GGM&S" width={80} height={80} className="object-cover w-full h-full" />
       </div>
       <h1 className="text-xl font-extrabold text-slate-900">GGM&amp;S Wholesale</h1>
