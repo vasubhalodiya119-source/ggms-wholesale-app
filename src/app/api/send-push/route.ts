@@ -29,14 +29,14 @@ function initWebPush() {
 }
 
 // Lazy-init firebase-admin from environment variable
-let firebaseAdmin: any = null
+let isFirebaseInitialized = false
 
-function getFirebaseAdmin() {
-  if (firebaseAdmin) return firebaseAdmin
+function initFirebase() {
+  if (isFirebaseInitialized) return true
 
   try {
-    const admin = require('firebase-admin')
-    if (!admin.apps.length) {
+    const { getApps, initializeApp, cert } = require('firebase-admin/app')
+    if (!getApps().length) {
       // Try env var first (for Vercel / production), then fall back to local file
       const envJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON
       let serviceAccount: any
@@ -53,24 +53,23 @@ function getFirebaseAdmin() {
             serviceAccount = JSON.parse(fs.readFileSync(filePath, 'utf8'))
           } else {
             console.warn('firebase-service-account.json not found on disk.')
-            return null
+            return false
           }
         } catch (fileErr) {
           console.error('Error reading firebase-service-account.json file:', fileErr)
-          return null
+          return false
         }
       }
 
-      const { cert } = require('firebase-admin/app')
-      admin.initializeApp({
+      initializeApp({
         credential: cert(serviceAccount)
       })
     }
-    firebaseAdmin = admin
-    return admin
+    isFirebaseInitialized = true
+    return true
   } catch (e) {
     console.error('Failed to initialize firebase-admin:', e)
-    return null
+    return false
   }
 }
 
@@ -108,15 +107,16 @@ export async function POST(req: Request) {
     const sendPromises = subscriptions.map(async (sub) => {
       if (sub.auth === 'fcm') {
         // Native Push via FCM
-        const admin = getFirebaseAdmin()
-        if (!admin) {
+        const ready = initFirebase()
+        if (!ready) {
           console.error('Firebase admin not initialized, skipping FCM push to:', sub.endpoint?.substring(0, 20))
           failCount++
           return
         }
 
         try {
-          await admin.messaging().send({
+          const { getMessaging } = require('firebase-admin/messaging')
+          await getMessaging().send({
             token: sub.endpoint, // We stored FCM token in endpoint
             notification: {
               title: title || 'Notification',
