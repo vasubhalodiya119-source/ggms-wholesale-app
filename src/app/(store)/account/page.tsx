@@ -7,7 +7,7 @@ import { ShoppingBasket, Heart, ShoppingCart, LogOut, BookUser, Megaphone, Downl
 import { useShopAuth } from '@/lib/shop-auth'
 import { supabase } from '@/lib/supabase'
 import { Settings } from '@/lib/types'
-import { getPushPermissionStatus, subscribeToPush } from '@/lib/push'
+import { getPushPermissionStatus, subscribeToPush, getPushLogs, clearPushLogs } from '@/lib/push'
 
 export default function AccountPage() {
   const { shop, loading, logout } = useShopAuth()
@@ -15,6 +15,7 @@ export default function AccountPage() {
   const [settings, setSettings] = useState<Settings | null>(null)
   const [pushStatus, setPushStatus] = useState<'granted' | 'denied' | 'prompt' | 'loading'>('loading')
   const [isRegistering, setIsRegistering] = useState(false)
+  const [logs, setLogs] = useState<Array<{ time: string; message: string; isError: boolean }>>([])
 
   useEffect(() => {
     if (!loading && !shop) router.push('/login?redirect=/account')
@@ -33,6 +34,17 @@ export default function AccountPage() {
       })
     }
   }, [shop])
+
+  useEffect(() => {
+    setLogs(getPushLogs())
+    const handleLogsChanged = () => {
+      setLogs(getPushLogs())
+    }
+    window.addEventListener('ggms_push_logs_changed', handleLogsChanged)
+    return () => {
+      window.removeEventListener('ggms_push_logs_changed', handleLogsChanged)
+    }
+  }, [])
 
   async function handleTestRegister() {
     if (!shop) return
@@ -127,6 +139,26 @@ export default function AccountPage() {
         >
           {isRegistering ? 'પ્રોસેસ ચાલુ છે...' : 'નોટિફિકેશન ફરી એક્ટિવેટ / ટેસ્ટ કરો'}
         </button>
+
+        {/* Real-time Push Logs */}
+        <div className="pt-2 border-t border-slate-100 space-y-1">
+          <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase">
+            <span>સિસ્ટમ લૉગ્સ (System Logs)</span>
+            <button onClick={() => clearPushLogs()} className="text-purple-500 hover:underline normal-case">Clear</button>
+          </div>
+          <div className="bg-slate-50 border border-slate-100 rounded-xl p-2 max-h-32 overflow-y-auto font-mono text-[9px] text-slate-500 space-y-1">
+            {logs.length === 0 ? (
+              <p className="text-slate-400 italic">કોઈ લૉગ્સ ઉપલબ્ધ નથી</p>
+            ) : (
+              logs.map((log, index) => (
+                <div key={index} className={`flex items-start gap-1 ${log.isError ? 'text-red-500' : 'text-slate-600'}`}>
+                  <span className="text-slate-400 flex-shrink-0">[{new Date(log.time).toLocaleTimeString()}]</span>
+                  <span className="break-all">{log.message}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
