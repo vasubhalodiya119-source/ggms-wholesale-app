@@ -3,15 +3,18 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ShoppingBasket, Heart, ShoppingCart, LogOut, BookUser, Megaphone, Download, Share2 } from 'lucide-react'
+import { ShoppingBasket, Heart, ShoppingCart, LogOut, BookUser, Megaphone, Download, Share2, AlertCircle, CheckCircle, Settings2 } from 'lucide-react'
 import { useShopAuth } from '@/lib/shop-auth'
 import { supabase } from '@/lib/supabase'
 import { Settings } from '@/lib/types'
+import { getPushPermissionStatus, subscribeToPush } from '@/lib/push'
 
 export default function AccountPage() {
   const { shop, loading, logout } = useShopAuth()
   const router = useRouter()
   const [settings, setSettings] = useState<Settings | null>(null)
+  const [pushStatus, setPushStatus] = useState<'granted' | 'denied' | 'prompt' | 'loading'>('loading')
+  const [isRegistering, setIsRegistering] = useState(false)
 
   useEffect(() => {
     if (!loading && !shop) router.push('/login?redirect=/account')
@@ -22,6 +25,30 @@ export default function AccountPage() {
       setSettings(data as Settings)
     })
   }, [])
+
+  useEffect(() => {
+    if (shop) {
+      getPushPermissionStatus().then(status => {
+        setPushStatus(status)
+      })
+    }
+  }, [shop])
+
+  async function handleTestRegister() {
+    if (!shop) return
+    setIsRegistering(true)
+    try {
+      await subscribeToPush(shop.id)
+      const newStatus = await getPushPermissionStatus()
+      setPushStatus(newStatus)
+      alert('નોટિફિકેશન રજીસ્ટ્રેશન પ્રોસેસ પૂર્ણ થઈ! જો પરમિશન ડાયલોગ આવ્યો હોય તો Allow આપો.')
+    } catch (e) {
+      console.error(e)
+      alert('ભૂલ થઈ: ' + (e instanceof Error ? e.message : String(e)))
+    } finally {
+      setIsRegistering(false)
+    }
+  }
 
   async function handleShare() {
     const url = window.location.origin
@@ -59,6 +86,47 @@ export default function AccountPage() {
             <p className="text-[11px] text-white/80 mt-1">ઉધાર લિમિટ: ₹{shop.credit_limit}</p>
           )}
         </div>
+      </div>
+
+      {/* Push Notification Diagnostics */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-slate-700 text-sm flex items-center gap-2">
+            <Megaphone size={16} className="text-purple-500" /> નોટિફિકેશન સ્ટેટસ (Push Check)
+          </h3>
+          <span className={`text-[11px] font-extrabold px-2.5 py-1 rounded-full flex items-center gap-1 ${
+            pushStatus === 'granted' ? 'bg-green-50 text-green-600' :
+            pushStatus === 'denied' ? 'bg-red-50 text-red-600' :
+            pushStatus === 'prompt' ? 'bg-amber-50 text-amber-600' :
+            'bg-slate-50 text-slate-400'
+          }`}>
+            {pushStatus === 'granted' && <><CheckCircle size={12} /> ચાલુ છે (Allowed)</>}
+            {pushStatus === 'denied' && <><AlertCircle size={12} /> બંધ છે (Denied)</>}
+            {pushStatus === 'prompt' && <><AlertCircle size={12} /> બાકી છે (Prompt)</>}
+            {pushStatus === 'loading' && 'Checking...'}
+          </span>
+        </div>
+
+        {pushStatus === 'denied' && (
+          <div className="bg-red-50/50 border border-red-100 rounded-xl p-3 text-[11px] text-red-600 space-y-1">
+            <p className="font-bold">⚠️ નોટિફિકેશન બ્લોક કરેલ છે:</p>
+            <p>તમારા ફોન માં નોટિફિકેશન બંધ હોવાથી એડમિન પેનલના મેસેજ આવી શકશે નહીં. ચાલુ કરવા માટે:</p>
+            <ol className="list-decimal list-inside mt-1 ml-1 space-y-0.5">
+              <li>ફોનના <b>Settings (સેટિંગ્સ)</b> માં જાઓ.</li>
+              <li><b>Apps</b> (અથવા Application Manager) પર ક્લિક કરો.</li>
+              <li><b>GGM&S Wholesale</b> એપ શોધો.</li>
+              <li><b>Notifications</b> માં જઈને <b>Allow (ચાલુ)</b> કરો.</li>
+            </ol>
+          </div>
+        )}
+
+        <button
+          onClick={handleTestRegister}
+          disabled={isRegistering}
+          className="w-full bg-purple-50 border border-purple-200 hover:bg-purple-100/70 text-purple-700 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+        >
+          {isRegistering ? 'પ્રોસેસ ચાલુ છે...' : 'નોટિફિકેશન ફરી એક્ટિવેટ / ટેસ્ટ કરો'}
+        </button>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
