@@ -14,6 +14,37 @@ function urlBase64ToUint8Array(base64String: string) {
 import { Capacitor } from '@capacitor/core'
 import { PushNotifications } from '@capacitor/push-notifications'
 
+export function getPushLogs(): Array<{ time: string; message: string; isError: boolean }> {
+  if (typeof window === 'undefined') return []
+  try {
+    return JSON.parse(localStorage.getItem('ggms_push_logs') || '[]')
+  } catch {
+    return []
+  }
+}
+
+export function clearPushLogs() {
+  if (typeof window === 'undefined') return
+  localStorage.removeItem('ggms_push_logs')
+  window.dispatchEvent(new Event('ggms_push_logs_changed'))
+}
+
+function logPushEvent(message: string, isError = false) {
+  if (typeof window === 'undefined') return
+  try {
+    const logs = JSON.parse(localStorage.getItem('ggms_push_logs') || '[]')
+    logs.push({
+      time: new Date().toISOString(),
+      message,
+      isError
+    })
+    localStorage.setItem('ggms_push_logs', JSON.stringify(logs.slice(-15)))
+    window.dispatchEvent(new Event('ggms_push_logs_changed'))
+  } catch (e) {
+    console.error('Failed to log push event', e)
+  }
+}
+
 export async function getPushPermissionStatus(): Promise<'granted' | 'denied' | 'prompt'> {
   if (typeof window === 'undefined') return 'denied';
 
@@ -22,6 +53,7 @@ export async function getPushPermissionStatus(): Promise<'granted' | 'denied' | 
       const perm = await PushNotifications.checkPermissions();
       return perm.receive === 'prompt-with-rationale' ? 'prompt' : perm.receive;
     } catch (e) {
+      logPushEvent('Error checking push permissions: ' + (e instanceof Error ? e.message : String(e)), true)
       return 'denied';
     }
   } else {
@@ -39,31 +71,36 @@ export async function subscribeToPush(shopId: string | null) {
   if (typeof window === 'undefined') return
 
   // Prevent double-calls in the same session
-  if (isSubscribing || hasSubscribed) return
+  if (isSubscribing || hasSubscribed) {
+    logPushEvent(`Subscription skipped. isSubscribing: ${isSubscribing}, hasSubscribed: ${hasSubscribed}`)
+    return
+  }
   isSubscribing = true
+  logPushEvent(`Starting subscribeToPush for shop: ${shopId}`)
 
   try {
     if (Capacitor.isNativePlatform()) {
-      // ----------------------------
-      // NATIVE (ANDROID/IOS) PUSH
-      // ----------------------------
+      logPushEvent('Native platform detected')
       let permStatus = await PushNotifications.checkPermissions();
+      logPushEvent(`Initial permission status: ${permStatus.receive}`)
       if (permStatus.receive === 'prompt' || permStatus.receive === 'prompt-with-rationale') {
+        logPushEvent('Requesting push permissions...')
         permStatus = await PushNotifications.requestPermissions();
+        logPushEvent(`Permission request result: ${permStatus.receive}`)
       }
       if (permStatus.receive !== 'granted') {
-        console.warn('User denied push permission');
+        logPushEvent('User denied push permission', true);
         return;
       }
 
-      // Remove any previously added listeners to prevent duplicates
+      logPushEvent('Removing previous push listeners...')
       await PushNotifications.removeAllListeners();
 
-      // On success, we get an FCM token
+      logPushEvent('Registering push listeners...')
       await PushNotifications.addListener('registration', async (token) => {
-        console.log('Push registration success, token: ' + token.value);
+        logPushEvent(`Push registration success. Token prefix: ${token.value.substring(0, 10)}...`);
         // Save FCM token to database
-        await supabase.from('push_subscriptions').upsert(
+        const { error: dbErr } = await supabase.from('push_subscriptions').upsert(
           {
             shop_id: shopId,
             endpoint: token.value, // Treat FCM token as endpoint
@@ -72,41 +109,55 @@ export async function subscribeToPush(shopId: string | null) {
           },
           { onConflict: 'endpoint' }
         )
-        hasSubscribed = true
+        if (dbErr) {
+          logPushEvent(`Failed to save token to database: ${dbErr.message}`, true)
+        } else {
+          logPushEvent('FCM token saved to database successfully.')
+          hasSubscribed = true
+        }
       });
 
       await PushNotifications.addListener('registrationError', (error: any) => {
-        console.error('Error on registration: ' + JSON.stringify(error));
+        logPushEvent(`Error on registration: ${JSON.stringify(error)}`, true);
       });
 
       await PushNotifications.addListener('pushNotificationReceived', (notification) => {
-        console.log('Push received: ', notification);
+        logPushEvent(`Push notification received: ${notification.title}`);
       });
 
       await PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
-        console.log('Push action performed: ', notification);
+        logPushEvent(`Push notification action performed: ${notification.actionId}`);
       });
 
-      // Register with Apple / Google to receive push via APNS/FCM
+      logPushEvent('Registering with Apple/Google push service...')
       await PushNotifications.register();
+      logPushEvent('PushNotifications.register() called.')
 
     } else {
-      // ----------------------------
-      // WEB PUSH (BROWSER)
-      // ----------------------------
-      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
+      logPushEvent('Web platform detected')
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        logPushEvent('ServiceWorker or PushManager not supported', true)
+        return
+      }
 
       const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-      if (!vapidPublicKey) return
+      if (!vapidPublicKey) {
+        logPushEvent('VAPID public key not set', true)
+        return
+      }
 
       try {
+        logPushEvent('Requesting notification permission...')
         const permission = await Notification.requestPermission()
+        logPushEvent(`Notification permission result: ${permission}`)
         if (permission !== 'granted') return
 
         const registration = await navigator.serviceWorker.ready
+        logPushEvent('Service worker ready. Getting push subscription...')
         let subscription = await registration.pushManager.getSubscription()
 
         if (subscription) {
+          logPushEvent('Found existing subscription')
           const currentKey = subscription.options?.applicationServerKey
           const expectedKey = urlBase64ToUint8Array(vapidPublicKey)
           let match = true
@@ -127,22 +178,29 @@ export async function subscribeToPush(shopId: string | null) {
           }
 
           if (!match) {
+            logPushEvent('VAPID key mismatch, unsubscribing...')
             await subscription.unsubscribe()
             subscription = null
           }
         }
 
         if (!subscription) {
+          logPushEvent('Creating new push subscription...')
           subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
           })
+          logPushEvent('Subscription created successfully')
         }
 
         const subJson = subscription.toJSON()
-        if (!subJson.endpoint || !subJson.keys?.p256dh || !subJson.keys?.auth) return
+        if (!subJson.endpoint || !subJson.keys?.p256dh || !subJson.keys?.auth) {
+          logPushEvent('Invalid subscription JSON format', true)
+          return
+        }
 
-        await supabase.from('push_subscriptions').upsert(
+        logPushEvent('Saving web subscription to database...')
+        const { error: dbErr } = await supabase.from('push_subscriptions').upsert(
           {
             shop_id: shopId,
             endpoint: subJson.endpoint,
@@ -151,11 +209,19 @@ export async function subscribeToPush(shopId: string | null) {
           },
           { onConflict: 'endpoint' }
         )
-        hasSubscribed = true
-      } catch (err) {
-        console.error('Push subscribe failed', err)
+        
+        if (dbErr) {
+          logPushEvent(`Failed to save web subscription to database: ${dbErr.message}`, true)
+        } else {
+          logPushEvent('Web subscription saved to database successfully.')
+          hasSubscribed = true
+        }
+      } catch (err: any) {
+        logPushEvent(`Push subscribe failed: ${err?.message || String(err)}`, true)
       }
     }
+  } catch (err: any) {
+    logPushEvent(`Subscribe general error: ${err?.message || String(err)}`, true)
   } finally {
     isSubscribing = false
   }
