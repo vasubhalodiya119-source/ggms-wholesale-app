@@ -8,9 +8,14 @@ import { supabase } from '@/lib/supabase'
 import { Category, Settings, DailyRate } from '@/lib/types'
 import { PremiumDownloadCard } from '@/components/PremiumDownloadCard'
 
+import { useRouter } from 'next/navigation'
+import { useAdminAuth } from '@/lib/admin-auth'
+
 type Banner = { id: string; image_url: string; link_url: string | null }
 
 export default function HomePage() {
+  const router = useRouter()
+  const { admin, loading: adminLoading } = useAdminAuth()
   const [categories, setCategories] = useState<Category[]>([])
   const [settings, setSettings] = useState<Settings | null>(null)
   const [rates, setRates] = useState<DailyRate[]>([])
@@ -19,6 +24,12 @@ export default function HomePage() {
   const [appUrl, setAppUrl] = useState('')
   const [activeBanner, setActiveBanner] = useState(0)
   const bannerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!adminLoading && admin) {
+      router.push('/admin/dashboard')
+    }
+  }, [admin, adminLoading, router])
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
