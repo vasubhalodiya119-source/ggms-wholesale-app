@@ -25,6 +25,14 @@ export default function HomePage() {
   const [activeBanner, setActiveBanner] = useState(0)
   const bannerRef = useRef<HTMLDivElement>(null)
 
+  const [isMounted, setIsMounted] = useState(false)
+  const [hasAdminSession, setHasAdminSession] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+    setHasAdminSession(!!localStorage.getItem('ggms_admin_session'))
+  }, [])
+
   useEffect(() => {
     if (!adminLoading && admin) {
       router.push('/admin/dashboard')
@@ -41,6 +49,14 @@ export default function HomePage() {
       }
     }
   }, [])
+
+  if (!isMounted || hasAdminSession) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+      </div>
+    )
+  }
 
   useEffect(() => {
     supabase.from('categories').select('*').order('sort_order').then(({ data }) => setCategories((data as Category[]) || []))
