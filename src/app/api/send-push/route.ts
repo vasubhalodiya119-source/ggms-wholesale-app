@@ -6,12 +6,27 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 const supabase = createClient(supabaseUrl, supabaseKey)
 
-// Configure web-push
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT || 'mailto:support@example.com',
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '',
-  process.env.VAPID_PRIVATE_KEY || ''
-)
+// Configure web-push lazily
+let isWebPushInitialized = false
+function initWebPush() {
+  if (isWebPushInitialized) return
+
+  const subject = process.env.VAPID_SUBJECT || 'mailto:support@example.com'
+  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+  const privateKey = process.env.VAPID_PRIVATE_KEY
+
+  if (!publicKey || !privateKey) {
+    console.warn('VAPID keys not set. Web Push will not work.')
+    return
+  }
+
+  try {
+    webpush.setVapidDetails(subject, publicKey, privateKey)
+    isWebPushInitialized = true
+  } catch (e) {
+    console.error('Failed to set VAPID details:', e)
+  }
+}
 
 // Lazy-init firebase-admin from environment variable
 let firebaseAdmin: any = null
@@ -29,11 +44,19 @@ function getFirebaseAdmin() {
       if (envJson) {
         serviceAccount = JSON.parse(envJson)
       } else {
-        // Fallback: try loading from file (local development)
+        // Fallback: try loading from file dynamically (local development)
         try {
-          serviceAccount = require('../../../../firebase-service-account.json')
-        } catch {
-          console.error('Firebase service account not found in env var or file. FCM push will not work.')
+          const fs = require('fs')
+          const path = require('path')
+          const filePath = path.join(process.cwd(), 'firebase-service-account.json')
+          if (fs.existsSync(filePath)) {
+            serviceAccount = JSON.parse(fs.readFileSync(filePath, 'utf8'))
+          } else {
+            console.warn('firebase-service-account.json not found on disk.')
+            return null
+          }
+        } catch (fileErr) {
+          console.error('Error reading firebase-service-account.json file:', fileErr)
           return null
         }
       }
@@ -52,6 +75,7 @@ function getFirebaseAdmin() {
 
 export async function POST(req: Request) {
   try {
+    initWebPush()
     const payload = await req.json()
     const { title, body, url, shop_id } = payload
 
