@@ -10,8 +10,10 @@ export default function AdminProtectedLayout({ children }: { children: React.Rea
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && !admin) router.push('/admin')
-  }, [loading, admin, router])
+    if (!loading && !admin) {
+      window.location.href = '/admin'
+    }
+  }, [loading, admin])
 
   if (loading) return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center">

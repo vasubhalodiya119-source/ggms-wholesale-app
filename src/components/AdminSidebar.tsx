@@ -90,7 +90,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
           onClick={() => {
             logout()
             if (onClose) onClose()
-            router.push('/admin')
+            window.location.href = '/admin'
           }}
           className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 active:bg-red-100"
         >
