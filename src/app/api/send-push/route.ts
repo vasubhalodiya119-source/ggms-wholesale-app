@@ -61,8 +61,9 @@ function getFirebaseAdmin() {
         }
       }
 
+      const { cert } = require('firebase-admin/app')
       admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
+        credential: cert(serviceAccount)
       })
     }
     firebaseAdmin = admin
