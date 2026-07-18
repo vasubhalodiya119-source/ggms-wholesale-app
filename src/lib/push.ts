@@ -104,7 +104,7 @@ export async function subscribeToPush(shopId: string | null) {
           {
             shop_id: shopId,
             endpoint: token.value, // Treat FCM token as endpoint
-            p256dh: null,
+            p256dh: 'fcm', // Use 'fcm' as dummy value to satisfy database NOT NULL constraint
             auth: 'fcm', // Special flag to identify FCM tokens
           },
           { onConflict: 'endpoint' }
