@@ -64,14 +64,6 @@ export default function HomePage() {
     }
   }, [])
 
-  if (!isMounted || shouldRedirectAdmin) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-      </div>
-    )
-  }
-
   useEffect(() => {
     supabase.from('categories').select('*').order('sort_order').then(({ data }) => setCategories((data as Category[]) || []))
     supabase.from('settings').select('*').eq('id', 1).single().then(({ data }) => setSettings(data as Settings))
@@ -85,6 +77,14 @@ export default function HomePage() {
     const timer = setInterval(() => setActiveBanner(prev => (prev + 1) % banners.length), 3000)
     return () => clearInterval(timer)
   }, [banners.length])
+
+  if (!isMounted || shouldRedirectAdmin) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+      </div>
+    )
+  }
 
   return (
     <div className="px-4 pt-3 space-y-4">
