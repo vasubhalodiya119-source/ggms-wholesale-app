@@ -32,7 +32,9 @@ export default function AdminProtectedLayout({ children }: { children: React.Rea
       {/* Main content area */}
       <div className="flex-1 flex flex-col min-h-screen">
         {/* Mobile top header with hamburger - only visible on mobile */}
-        <AdminSidebar />
+        <div className="md:hidden">
+          <AdminSidebar />
+        </div>
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
     </div>
