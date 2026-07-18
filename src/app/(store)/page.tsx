@@ -26,18 +26,32 @@ export default function HomePage() {
   const bannerRef = useRef<HTMLDivElement>(null)
 
   const [isMounted, setIsMounted] = useState(false)
-  const [hasAdminSession, setHasAdminSession] = useState(false)
+  const [shouldRedirectAdmin, setShouldRedirectAdmin] = useState(false)
 
   useEffect(() => {
     setIsMounted(true)
-    setHasAdminSession(!!localStorage.getItem('ggms_admin_session'))
+    const lastActive = localStorage.getItem('ggms_last_active_panel')
+    const hasAdmin = !!localStorage.getItem('ggms_admin_session')
+    
+    if (lastActive === 'admin' || hasAdmin) {
+      setShouldRedirectAdmin(true)
+    } else {
+      localStorage.setItem('ggms_last_active_panel', 'customer')
+    }
   }, [])
 
   useEffect(() => {
-    if (!adminLoading && admin) {
-      router.push('/admin/dashboard')
+    if (shouldRedirectAdmin) {
+      const hasAdmin = !!localStorage.getItem('ggms_admin_session')
+      if (hasAdmin) {
+        if (!adminLoading && admin) {
+          router.push('/admin/dashboard')
+        }
+      } else {
+        router.push('/admin')
+      }
     }
-  }, [admin, adminLoading, router])
+  }, [shouldRedirectAdmin, admin, adminLoading, router])
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -50,7 +64,7 @@ export default function HomePage() {
     }
   }, [])
 
-  if (!isMounted || hasAdminSession) {
+  if (!isMounted || shouldRedirectAdmin) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>

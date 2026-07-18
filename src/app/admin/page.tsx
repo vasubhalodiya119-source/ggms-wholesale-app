@@ -15,6 +15,7 @@ export default function AdminLoginPage() {
   const router = useRouter()
 
   useEffect(() => {
+    localStorage.setItem('ggms_last_active_panel', 'admin')
     // Override manifest so "Add to Home Screen" shows "GGM&S Wholesale"
     let link = document.querySelector('link[rel="manifest"]') as HTMLLinkElement
     if (!link) {
@@ -37,7 +38,13 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 max-w-md mx-auto w-full bg-slate-50">
-      <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-sm mb-4">
+      <div 
+        className="w-20 h-20 rounded-2xl overflow-hidden shadow-sm mb-4 cursor-pointer"
+        onDoubleClick={() => {
+          localStorage.setItem('ggms_last_active_panel', 'customer')
+          router.push('/login')
+        }}
+      >
         <Image src="/logo.png" alt="GGM&S" width={80} height={80} className="object-cover w-full h-full" />
       </div>
       <h1 className="text-xl font-extrabold text-slate-900">GGM&amp;S Wholesale</h1>
