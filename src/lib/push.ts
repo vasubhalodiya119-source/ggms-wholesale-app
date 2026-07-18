@@ -59,11 +59,8 @@ export async function subscribeToPush(shopId: string | null) {
       // Remove any previously added listeners to prevent duplicates
       await PushNotifications.removeAllListeners();
 
-      // Register with Apple / Google to receive push via APNS/FCM
-      await PushNotifications.register();
-
       // On success, we get an FCM token
-      PushNotifications.addListener('registration', async (token) => {
+      await PushNotifications.addListener('registration', async (token) => {
         console.log('Push registration success, token: ' + token.value);
         // Save FCM token to database
         await supabase.from('push_subscriptions').upsert(
@@ -78,17 +75,20 @@ export async function subscribeToPush(shopId: string | null) {
         hasSubscribed = true
       });
 
-      PushNotifications.addListener('registrationError', (error: any) => {
+      await PushNotifications.addListener('registrationError', (error: any) => {
         console.error('Error on registration: ' + JSON.stringify(error));
       });
 
-      PushNotifications.addListener('pushNotificationReceived', (notification) => {
+      await PushNotifications.addListener('pushNotificationReceived', (notification) => {
         console.log('Push received: ', notification);
       });
 
-      PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
+      await PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
         console.log('Push action performed: ', notification);
       });
+
+      // Register with Apple / Google to receive push via APNS/FCM
+      await PushNotifications.register();
 
     } else {
       // ----------------------------
