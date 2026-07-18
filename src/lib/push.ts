@@ -129,6 +129,22 @@ export async function subscribeToPush(shopId: string | null) {
         logPushEvent(`Push notification action performed: ${notification.actionId}`);
       });
 
+      logPushEvent('Creating high-importance push notification channel...')
+      try {
+        await PushNotifications.createChannel({
+          id: 'ggms_notifications',
+          name: 'GGM&S Announcements',
+          description: 'General notifications and updates from GGM&S',
+          importance: 5, // High/Max importance (5 = IMPORTANCE_HIGH)
+          visibility: 1, // Public (1 = VISIBILITY_PUBLIC)
+          sound: 'default',
+          vibration: true
+        })
+        logPushEvent('Push channel created successfully.')
+      } catch (channelErr: any) {
+        logPushEvent('Error creating push channel: ' + channelErr.message, true)
+      }
+
       logPushEvent('Registering with Apple/Google push service...')
       await PushNotifications.register();
       logPushEvent('PushNotifications.register() called.')

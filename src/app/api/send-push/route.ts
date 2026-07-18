@@ -129,7 +129,8 @@ export async function POST(req: Request) {
               priority: 'high',
               notification: {
                 sound: 'default',
-                priority: 'high'
+                priority: 'high',
+                channelId: 'ggms_notifications'
               }
             }
           })
