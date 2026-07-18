@@ -126,8 +126,10 @@ export async function POST(req: Request) {
               url: url || '/'
             },
             android: {
+              priority: 'high',
               notification: {
-                sound: 'default'
+                sound: 'default',
+                priority: 'high'
               }
             }
           })
