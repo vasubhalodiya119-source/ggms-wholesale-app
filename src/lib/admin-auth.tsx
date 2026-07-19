@@ -31,19 +31,29 @@ async function subscribeAdminToPush(adminId: string) {
 
   if (Capacitor.isNativePlatform()) {
     let permStatus = await PushNotifications.checkPermissions();
-    if (permStatus.receive === 'prompt') {
+    if (permStatus.receive === 'prompt' || permStatus.receive === 'prompt-with-rationale') {
       permStatus = await PushNotifications.requestPermissions();
     }
     if (permStatus.receive !== 'granted') return;
 
-    await PushNotifications.register();
+    await PushNotifications.removeAllListeners();
 
     PushNotifications.addListener('registration', async (token) => {
-      await supabase.from('admin_push_subscriptions').upsert(
-        { admin_id: adminId, endpoint: token.value, p256dh: null, auth: 'fcm' },
-        { onConflict: 'endpoint' }
-      )
+      try {
+        await supabase.from('admin_push_subscriptions').upsert(
+          { admin_id: adminId, endpoint: token.value, p256dh: null, auth: 'fcm' },
+          { onConflict: 'endpoint' }
+        )
+      } catch (err) {
+        console.error('Failed to save admin push token:', err)
+      }
     });
+
+    PushNotifications.addListener('registrationError', (error: any) => {
+      console.error('Error on admin push registration:', error);
+    });
+
+    await PushNotifications.register();
   } else {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
     const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
