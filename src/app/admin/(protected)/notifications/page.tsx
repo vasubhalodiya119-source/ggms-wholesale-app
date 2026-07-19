@@ -58,6 +58,214 @@ type OrderShort = {
   created_at: string
 }
 
+
+interface NotificationTemplate {
+  title: string
+  message: string
+  image?: string
+  buttonText?: string
+  buttonLink?: string
+}
+
+const TEMPLATES: Record<string, NotificationTemplate[]> = {
+  offer: [
+    {
+      title: "🎉 તેલ પર ખાસ ડિસ્કાઉન્ટ!",
+      message: "આજના દિવસ માટે પ્રિમિયમ સીંગતેલ અને કપાસિયા તેલ પર ૧૦% વધારાનું ડિસ્કાઉન્ટ! લિમિટેડ સ્ટોક છે, જલ્દી ઓર્ડર કરો.",
+      image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=800",
+      buttonText: "હમણાં ખરીદો",
+      buttonLink: "/categories"
+    },
+    {
+      title: "🌾 પ્રિમિયમ બાસમતી ચોખા: ૧ કિલો ફ્રી!",
+      message: "કોઈપણ ૫ કિલો પ્રિમિયમ બાસમતી ચોખાની બેગ પર ૧ કિલો વધારાની બેગ બિલકુલ ફ્રી મેળવો. ઓફર મર્યાદિત સમય માટે.",
+      image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800",
+      buttonText: "ઓફર જુઓ",
+      buttonLink: "/categories"
+    },
+    {
+      title: "☕ ચા-કોફી અને પ્રીમિક્સ પર ૧૫% છૂટ!",
+      message: "તમારા કેફે અથવા ઘર માટે ચા, કોફી અને દૂધના પાવડર પર મેળવો ૧૫% ની જોરદાર બચત. ઓફર સ્ટોક સુધી મર્યાદિત.",
+      image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800",
+      buttonText: "ઓર્ડર કરો",
+      buttonLink: "/categories"
+    },
+    {
+      title: "🍬 તહેવાર સ્પેશિયલ હોલસેલ સેલ!",
+      message: "તહેવારોની તૈયારી કરો બચત સાથે! ખાંડ, મેંદો, રવો અને શુદ્ધ ઘી પર હોલસેલ રેટમાં બલ્ક ડિસ્કાઉન્ટ ચાલુ છે.",
+      image: "https://images.unsplash.com/photo-1581798459219-318e76aecc7b?w=800",
+      buttonText: "બલ્ક બુકિંગ",
+      buttonLink: "/categories"
+    },
+    {
+      title: "🧼 સાબુ અને ડિટર્જન્ટ પર બચત ધમાકા!",
+      message: "ધોવાના પાવડર અને વાસણ સાફ કરવાના સાબુ પર હોલસેલ ભાવે બમ્પર સેલ. કાર્ટનમાં ખરીદવા પર વધારાની ૫% છૂટ.",
+      image: "https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=800",
+      buttonText: "કાર્ટ જુઓ",
+      buttonLink: "/cart"
+    },
+    {
+      title: "🌶️ દેશી મસાલાઓ પર ૧૨% ફ્લેટ ડિસ્કાઉન્ટ!",
+      message: "બ્રાન્ડેડ અને ખુલ્લા ગરમ મસાલા, મરચું, હળદર અને ધાણાજીરું પર વિશેષ છૂટ. સ્વાદ અને સુગંધ પણ ઉત્તમ.",
+      image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800",
+      buttonText: "મસાલા વિભાગ",
+      buttonLink: "/categories"
+    },
+    {
+      title: "🍪 નમકીન અને બિસ્કિટ પર બાય ૨ ગેટ ૧ ફ્રી!",
+      message: "ચાય ટાઈમ સ્નેક્સ અને બિસ્કિટના કોમ્બો પેક પર ભારે સેલ. આજે જ તમારા ગ્રાહકો માટે સ્ટોક ઓર્ડર કરો.",
+      image: "https://images.unsplash.com/photo-1558961309-dbdf33b79f6b?w=800",
+      buttonText: "બાય ૨ ગેટ ૧",
+      buttonLink: "/categories"
+    },
+    {
+      title: "🥜 ડ્રાયફ્રૂટ્સ - હોલસેલ ભાવે!",
+      message: "ઉચ્ચ ગુણવત્તાવાળા કાજુ, બદામ, પિસ્તા અને કિસમિસ સીધા આયાતકાર પાસેથી મેળવો. ગુણવત્તામાં કોઈ સમજૂતી નહીં.",
+      image: "https://images.unsplash.com/photo-1596547609652-9cf5d8d76921?w=800",
+      buttonText: "ડ્રાયફ્રૂટ્સ જુઓ",
+      buttonLink: "/categories"
+    },
+    {
+      title: "🌾 ઘઉંનો લોટ અને દાળના ભાવમાં ઘટાડો!",
+      message: "શ્રેષ્ઠ ગુણવત્તાનો લોટ અને તુવેર/ચણાની દાળ પર આજના દિવસ માટે કિંમતમાં ઘટાડો. જલ્દી ખરીદી કરો.",
+      image: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=800",
+      buttonText: "હમણાં મંગાવો",
+      buttonLink: "/categories"
+    },
+    {
+      title: "🥤 ઠંડા પીણાં અને જ્યુસ પર સ્પેશિયલ ડિસ્કાઉન્ટ!",
+      message: "ઉનાળાની સિઝનમાં ગ્રાહકો માટે સોફ્ટ ડ્રિંક્સ અને ફ્રુટ જ્યુસના બોક્સ પર વધારાના ડિસ્કાઉન્ટ સાથે ખરીદી કરો.",
+      image: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=800",
+      buttonText: "ડ્રિંક્સ ઓર્ડર",
+      buttonLink: "/categories"
+    }
+  ],
+  info: [
+    {
+      title: "📦 નવી સ્ટોક આવી ગઈ છે!",
+      message: "નવો તાજો માલ આવી ગયો છે. ફોર્ચ્યુન, આશીર્વાદ અને ટાટા જેવા તમામ બ્રાન્ડ્સના પ્રોડક્ટ્સ લાઈવ છે. ઓર્ડર કરી લો.",
+      buttonText: "નવો સ્ટોક જુઓ",
+      buttonLink: "/categories"
+    },
+    {
+      title: "🚚 સેમ ડે ડિલિવરી (આજે જ ડિલિવરી)!",
+      message: "બપોરે ૧૨ વાગ્યા પહેલાં ઓર્ડર બુક કરો અને તમારા સ્ટોર સુધી સેમ ડે ડિલિવરી મેળવો. વધુ માહિતી માટે સંપર્ક કરો.",
+      buttonText: "ઓર્ડર બુક કરો",
+      buttonLink: "/"
+    },
+    {
+      title: "📊 નવી પ્રાઇસ લિસ્ટ લાઈવ કરવામાં આવી છે",
+      message: "રોજિંદી અને આવશ્યક ચીજવસ્તુઓની બદલાયેલી નવી કિંમતો લાઈવ છે. એપ્લિકેશનમાં ચેક કરી શકો છો.",
+      buttonText: "ભાવ જુઓ",
+      buttonLink: "/categories"
+    },
+    {
+      title: "💰 ફ્રી ડિલિવરી લીમીટમાં ફેરફાર",
+      message: "હવે તમે માત્ર રૂ. ૨૦૦૦ અથવા તેનાથી વધુના ઓર્ડર પર મફત ડિલિવરી મેળવી શકો છો. નાની બચત મોટી બચત!",
+      buttonText: "ખરીદી શરૂ કરો",
+      buttonLink: "/"
+    },
+    {
+      title: "📅 રવિવાર રજા અંગેની માહિતી",
+      message: "રવિવારના દિવસે અમારું વેરહાઉસ અને ડિલિવરી સેન્ટર બંધ રહેશે. આપના ઓર્ડર શનિવાર સુધીમાં જ બુક કરી લેવા વિનંતી.",
+      buttonText: "ઓર્ડરની વિગત",
+      buttonLink: "/orders"
+    },
+    {
+      title: "📲 નવું અપડેટ લાઈવ - પ્લે સ્ટોર",
+      message: "તમારી એપ્લિકેશનમાં વધુ સારા અનુભવ અને ઝડપી ઓર્ડરિંગ માટે નવું અપડેટ આવ્યું છે. અત્યારે જ અપડેટ કરો.",
+      buttonText: "અપડેટ કરો",
+      buttonLink: "/"
+    },
+    {
+      title: "💳 UPI પેમેન્ટ સુવિધા ઉપલબ્ધ",
+      message: "હવે તમે ડિલિવરીના સમયે સીધા QR કોડ સ્કેન કરીને અથવા UPI દ્વારા પેમેન્ટ કરી શકો છો. કેશલેસ બનો!",
+      buttonText: "એપ ખોલો",
+      buttonLink: "/"
+    },
+    {
+      title: "🧾 GST ઇન્વોઇસ ડાઉનલોડ પ્રક્રિયા",
+      message: "તમે તમારા તમામ જૂના અને નવા ઓર્ડરના ટેક્સ બિલ 'ઓર્ડર હિસ્ટ્રી' માં જઈને ક્યારેય પણ ડાઉનલોડ કરી શકો છો.",
+      buttonText: "હિસ્ટ્રી જુઓ",
+      buttonLink: "/orders"
+    },
+    {
+      title: "💬 વોટ્સએપ સપોર્ટ સેવા ચાલુ",
+      message: "હવે કોઈપણ પૂછપરછ કે સહાય માટે સીધા વોટ્સએપ પર અમારો સંપર્ક સાધો. નીચેના બટન પર ક્લિક કરો.",
+      buttonText: "વોટ્સએપ ચેટ",
+      buttonLink: "/"
+    },
+    {
+      title: "🚚 ઓર્ડર લાઈવ ટ્રેકિંગ ફીચર",
+      message: "તમારો ઓર્ડર ક્યાં પહોંચ્યો છે તે જોવા માટે ઓર્ડર હિસ્ટ્રીમાં જઈને લાઈવ ટ્રેક કરો.",
+      buttonText: "ટ્રેક કરો",
+      buttonLink: "/orders"
+    }
+  ],
+  notice: [
+    {
+      title: "⚠️ મહત્વપૂર્ણ: તમારું KYC પૂર્ણ કરો",
+      message: "સરકારી નિયમો મુજબ ઓર્ડર બુકિંગ ચાલુ રાખવા માટે તમારું શોપ લાઈસન્સ, જીએસટી અથવા આધાર કાર્ડ અપલોડ કરવું જરૂરી છે.",
+      buttonText: "KYC અપલોડ",
+      buttonLink: "/account"
+    },
+    {
+      title: "💳 બાકી પેમેન્ટ જમા કરાવવા બાબતે",
+      message: "આપના ખાતામાં પાછલા બિલની પેન્ડિંગ રકમ બાકી છે. નવો ઓર્ડર બુક કરવા માટે કૃપા કરીને બાકી ચૂકવણી કરો.",
+      buttonText: "લેજર જુઓ",
+      buttonLink: "/ledger"
+    },
+    {
+      title: "📈 લિમિટ અપડેટ અંગે સૂચના",
+      message: "તમારા પેમેન્ટના રેકોર્ડ મુજબ તમારી ક્રેડિટ ખરીદી મર્યાદા વધારવામાં આવી છે. વધુ માહિતી માટે પ્રોફાઇલ જુઓ.",
+      buttonText: "પ્રોફાઈલ જુઓ",
+      buttonLink: "/account"
+    },
+    {
+      title: "🌧️ વરસાદના કારણે ડિલિવરીમાં વિલંબ",
+      message: "ભારે વરસાદના કારણે ટ્રાફિક અને રસ્તાઓ બંધ હોવાથી ડિલિવરી થોડી મોડી થઈ શકે છે. સહકારની અપેક્ષા છે.",
+      buttonText: "ટ્રેક ઓર્ડર",
+      buttonLink: "/orders"
+    },
+    {
+      title: "📅 જાહેર રજાના દિવસે બંધ રહેશે",
+      message: "નજીકના તહેવારના તહેત આવતીકાલે અમારી ઓફિસ અને ગોડાઉન બંધ રહેશે. તમામ ઓર્ડર પછીના દિવસે મોકલાશે.",
+      buttonText: "મુખ્ય પેજ",
+      buttonLink: "/"
+    },
+    {
+      title: "🔒 એકાઉન્ટ પાસવર્ડ બદલવા બાબતે",
+      message: "સલામતીના કારણોસર, કૃપા કરીને સમયાંતરે તમારો એકાઉન્ટ લોગિન પાસવર્ડ બદલતા રહો.",
+      buttonText: "પાસવર્ડ બદલો",
+      buttonLink: "/account"
+    },
+    {
+      title: "📉 બજાર ભાવમાં ઝડપી ફેરફારની ચેતવણી",
+      message: "આંતરરાષ્ટ્રીય બજારોમાં વધારાના કારણે ખાંડ અને ડ્રાયફ્રૂટ્સના ભાવ કદાચ આવતીકાલથી વધી શકે છે. સ્ટોક સાચવો.",
+      buttonText: "ખરીદી કરો",
+      buttonLink: "/categories"
+    },
+    {
+      title: "📍 ડિલિવરી એડ્રેસ બદલાયું છે?",
+      message: "જો તમારા વેપારના સરનામાં કે મોબાઈલ નંબરમાં ફેરફાર થયો હોય, તો પ્રોફાઇલમાં જઈને વિગતો તાત્કાલિક અપડેટ કરો.",
+      buttonText: "સરનામું બદલો",
+      buttonLink: "/account"
+    },
+    {
+      title: "🔧 સિસ્ટમ મેઇન્ટેનન્સ અપડેટ",
+      message: "આજે રાત્રે ૧૨ થી ૩ દરમિયાન સર્વર અપગ્રેડેશનને કારણે ઓનલાઈન ઓર્ડર થોડા સમય માટે બંધ રહેશે.",
+      buttonText: "સમજ્યા",
+      buttonLink: "/"
+    },
+    {
+      title: "🛡️ હેલ્થ અને સેફ્ટી ગાઈડલાઈન્સ",
+      message: "અમારું સમગ્ર સ્ટાફ હેલ્થ અને સેફ્ટી ગાઈડલાઈન ફોલો કરે છે. સંપૂર્ણ સેનિટાઇઝેશન સાથે ડિલિવરી થાય છે.",
+      buttonText: "અંગે જાણો",
+      buttonLink: "/"
+    }
+  ]
+}
+
 type RichBroadcast = {
   id: string
   message: string // stored JSON or raw text
@@ -76,6 +284,7 @@ export default function NotificationCenterPage() {
 
   // Notification Compose Form States
   const [notifType, setNotifType] = useState<string>('offer')
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('')
   const [notifTitle, setNotifTitle] = useState<string>('')
   const [notifMessage, setNotifMessage] = useState<string>('')
   const [notifImage, setNotifImage] = useState<string>('')
@@ -326,7 +535,10 @@ export default function NotificationCenterPage() {
                   <button
                     key={type}
                     type="button"
-                    onClick={() => setNotifType(type)}
+                    onClick={() => {
+                      setNotifType(type)
+                      setSelectedTemplate('')
+                    }}
                     className={`py-2 px-3 text-xs font-black rounded-xl uppercase tracking-wider border-2 transition-all cursor-pointer ${
                       notifType === type
                         ? 'border-green-600 bg-green-50/30 text-green-800'
@@ -341,6 +553,39 @@ export default function NotificationCenterPage() {
                 ))}
               </div>
             </div>
+
+            {/* Template Selector */}
+            {notifType !== 'custom' && (
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Select Template / નમૂનો પસંદ કરો</label>
+                <select
+                  value={selectedTemplate}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    setSelectedTemplate(val)
+                    if (val !== "") {
+                      const idx = parseInt(val, 10)
+                      const tpl = TEMPLATES[notifType][idx]
+                      if (tpl) {
+                        setNotifTitle(tpl.title)
+                        setNotifMessage(tpl.message)
+                        setNotifImage(tpl.image || '')
+                        setNotifButtonText(tpl.buttonText || '')
+                        setNotifButtonLink(tpl.buttonLink || '')
+                      }
+                    }
+                  }}
+                  className="w-full text-xs font-bold p-3 bg-slate-50/70 border border-slate-200 rounded-xl focus:border-green-500 focus:outline-none"
+                >
+                  <option value="">-- નમૂનો પસંદ કરો (Select Template) --</option>
+                  {TEMPLATES[notifType]?.map((tpl, idx) => (
+                    <option key={idx} value={idx}>
+                      {tpl.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* Title & Message */}
             <div className="grid sm:grid-cols-2 gap-4">
