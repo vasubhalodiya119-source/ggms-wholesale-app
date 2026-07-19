@@ -66,6 +66,18 @@ async function subscribeAdminToPush(adminId: string) {
       console.error('Error on admin push registration:', error);
     });
 
+    PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+      try {
+        const data = action.notification?.data;
+        const url = data?.url || data?.buttonLink;
+        if (url) {
+          window.location.href = url;
+        }
+      } catch (err: any) {
+        console.error('Push action performed failed:', err.message || err);
+      }
+    });
+
     await PushNotifications.register();
   } else {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return

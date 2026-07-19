@@ -99,6 +99,7 @@ export default function CartPage() {
           message: `${shop.shop_name} - ₹${grandTotal.toFixed(2)}`,
           target_type: 'admin',
           buttonLink: `/admin/dashboard?new_order=${order.id}`,
+          order_id: order.id,
         }),
       })
     } catch (pushErr) {

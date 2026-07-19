@@ -86,6 +86,7 @@ export async function POST(req: Request) {
     let target_type = payload.target_type
     let selected_customer_ids = payload.selected_customer_ids
     let segment_type = payload.segment_type
+    let order_id = payload.order_id
 
     // If target_type is not provided, try to infer it from other properties
     if (!target_type) {
@@ -224,14 +225,16 @@ export async function POST(req: Request) {
               body: message,
             },
             data: {
-              url: buttonLink || '/'
+              url: buttonLink || '/',
+              order_id: order_id || ''
             },
             android: {
               priority: 'high',
               notification: {
                 sound: 'default',
                 priority: 'high',
-                channelId: 'ggms_notifications'
+                channelId: 'ggms_notifications',
+                clickAction: 'new_order_actions'
               }
             }
           }

@@ -35,6 +35,7 @@ function DashboardContent() {
   const [newOrderAlert, setNewOrderAlert] = useState<NewOrderAlert | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
   const [replyText, setReplyText] = useState('')
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     const { data: orders } = await supabase.from('orders').select('*')
@@ -82,6 +83,22 @@ function DashboardContent() {
     }
     loadOrderFromUrl()
   }, [newOrderId])
+
+  useEffect(() => {
+    const autoAction = searchParams.get('auto_action')
+    if (!autoAction) return
+    const actionLabels: Record<string, string> = {
+      accept: 'ઓર્ડર સ્વીકારવામાં (Accept) આવ્યો છે! ✅',
+      pending: 'ઓર્ડર પેન્ડિંગ (Pending) રાખવામાં આવ્યો છે! ⏳',
+      decline: 'ઓર્ડર અસ્વીકાર (Decline) કરવામાં આવ્યો છે! ❌'
+    }
+    const label = actionLabels[autoAction]
+    if (label) {
+      setToastMessage(label)
+      const timer = setTimeout(() => setToastMessage(null), 4000)
+      return () => clearTimeout(timer)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     load()
@@ -190,7 +207,13 @@ function DashboardContent() {
   }
 
   return (
-    <div className="p-5 space-y-4">
+    <div className="p-5 space-y-4 relative">
+      {toastMessage && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[10000] bg-slate-900 text-white font-bold text-sm px-6 py-3.5 rounded-2xl shadow-2xl flex items-center gap-2 border border-slate-800 animate-slide-down">
+          <CheckCircle2 className="text-green-500" size={18} />
+          {toastMessage}
+        </div>
+      )}
       <h1 className="text-xl font-extrabold text-slate-900">Dashboard</h1>
 
       {(lowStockCount > 0 || creditAlertCount > 0) && (
