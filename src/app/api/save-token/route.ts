@@ -7,21 +7,36 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 
 export async function POST(req: Request) {
   try {
-    const { shop_id, endpoint, p256dh, auth } = await req.json()
+    const { shop_id, admin_id, is_admin, endpoint, p256dh, auth } = await req.json()
 
     if (!endpoint) {
       return NextResponse.json({ error: 'Endpoint is required' }, { status: 400 })
     }
 
-    const { data, error } = await supabase.from('push_subscriptions').upsert(
-      {
-        shop_id: shop_id || null,
-        endpoint: endpoint,
-        p256dh: p256dh || 'fcm',
-        auth: auth || 'fcm',
-      },
-      { onConflict: 'endpoint' }
-    )
+    let result;
+    if (is_admin || admin_id) {
+      result = await supabase.from('admin_push_subscriptions').upsert(
+        {
+          admin_id: admin_id || null,
+          endpoint: endpoint,
+          p256dh: p256dh || 'fcm',
+          auth: auth || 'fcm',
+        },
+        { onConflict: 'endpoint' }
+      )
+    } else {
+      result = await supabase.from('push_subscriptions').upsert(
+        {
+          shop_id: shop_id || null,
+          endpoint: endpoint,
+          p256dh: p256dh || 'fcm',
+          auth: auth || 'fcm',
+        },
+        { onConflict: 'endpoint' }
+      )
+    }
+
+    const { data, error } = result
 
     if (error) {
       console.error('Error saving token in database API:', error)

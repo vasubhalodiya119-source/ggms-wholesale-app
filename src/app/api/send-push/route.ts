@@ -252,7 +252,8 @@ export async function POST(req: Request) {
           console.error('Error sending FCM push:', e?.message || e)
           failCount++
           if (e.code === 'messaging/invalid-registration-token' || e.code === 'messaging/registration-token-not-registered') {
-            await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
+            const table = sub.admin_id ? 'admin_push_subscriptions' : 'push_subscriptions'
+            await supabase.from(table).delete().eq('endpoint', sub.endpoint)
           }
         }
       } else {
@@ -280,7 +281,8 @@ export async function POST(req: Request) {
           successCount++
         } catch (e: any) {
           if (e.statusCode === 410 || e.statusCode === 404) {
-            await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
+            const table = sub.admin_id ? 'admin_push_subscriptions' : 'push_subscriptions'
+            await supabase.from(table).delete().eq('endpoint', sub.endpoint)
           } else {
             console.error('Error sending Web push:', e?.message || e)
           }

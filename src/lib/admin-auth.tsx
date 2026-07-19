@@ -40,12 +40,25 @@ async function subscribeAdminToPush(adminId: string) {
 
     PushNotifications.addListener('registration', async (token) => {
       try {
-        await supabase.from('admin_push_subscriptions').upsert(
-          { admin_id: adminId, endpoint: token.value, p256dh: null, auth: 'fcm' },
-          { onConflict: 'endpoint' }
-        )
-      } catch (err) {
-        console.error('Failed to save admin push token:', err)
+        const res = await fetch('/api/save-token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            admin_id: adminId,
+            is_admin: true,
+            endpoint: token.value,
+            p256dh: 'fcm',
+            auth: 'fcm',
+          }),
+        })
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({ error: 'Unknown error' }))
+          throw new Error(errData.error || `HTTP error ${res.status}`)
+        }
+      } catch (err: any) {
+        console.error('Failed to save admin push token:', err.message || err)
       }
     });
 
@@ -96,10 +109,24 @@ async function subscribeAdminToPush(adminId: string) {
       }
       const subJson = sub.toJSON()
       if (!subJson.endpoint || !subJson.keys?.p256dh || !subJson.keys?.auth) return
-      await supabase.from('admin_push_subscriptions').upsert(
-        { admin_id: adminId, endpoint: subJson.endpoint, p256dh: subJson.keys.p256dh, auth: subJson.keys.auth },
-        { onConflict: 'endpoint' }
-      )
+      
+      const res = await fetch('/api/save-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          admin_id: adminId,
+          is_admin: true,
+          endpoint: subJson.endpoint,
+          p256dh: subJson.keys.p256dh,
+          auth: subJson.keys.auth,
+        }),
+      })
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(errData.error || `HTTP error ${res.status}`)
+      }
     } catch (err) {
       console.error('Admin push subscribe failed', err)
     }
