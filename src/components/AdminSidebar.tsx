@@ -128,7 +128,12 @@ export function AdminMobileHeader({ onOpen }: { onOpen: () => void }) {
 
 // Drawer wrapper for mobile
 export default function AdminSidebar() {
+  const [mounted, setMounted] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Lock body scroll when drawer is open
   useEffect(() => {
@@ -139,6 +144,10 @@ export default function AdminSidebar() {
     }
     return () => { document.body.style.overflow = '' }
   }, [drawerOpen])
+
+  if (!mounted) {
+    return null
+  }
 
   return (
     <>
