@@ -222,7 +222,8 @@ export async function POST(req: Request) {
           }
 
           if (image) {
-            fcmPayload.notification.imageUrl = image
+            fcmPayload.notification.image = image
+            fcmPayload.android.notification.image = image
             fcmPayload.data.image = image
           }
           if (buttonText && buttonLink) {
