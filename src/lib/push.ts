@@ -99,21 +99,28 @@ export async function subscribeToPush(shopId: string | null) {
       logPushEvent('Registering push listeners...')
       await PushNotifications.addListener('registration', async (token) => {
         logPushEvent(`Push registration success. Token prefix: ${token.value.substring(0, 10)}...`);
-        // Save FCM token to database
-        const { error: dbErr } = await supabase.from('push_subscriptions').upsert(
-          {
-            shop_id: shopId,
-            endpoint: token.value, // Treat FCM token as endpoint
-            p256dh: 'fcm', // Use 'fcm' as dummy value to satisfy database NOT NULL constraint
-            auth: 'fcm', // Special flag to identify FCM tokens
-          },
-          { onConflict: 'endpoint' }
-        )
-        if (dbErr) {
-          logPushEvent(`Failed to save token to database: ${dbErr.message}`, true)
-        } else {
+        // Save FCM token to database using the server-side API to avoid client-side CORS issues
+        try {
+          const res = await fetch('/api/save-token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              shop_id: shopId,
+              endpoint: token.value,
+              p256dh: 'fcm',
+              auth: 'fcm',
+            }),
+          })
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({ error: 'Unknown error' }))
+            throw new Error(errData.error || `HTTP error ${res.status}`)
+          }
           logPushEvent('FCM token saved to database successfully.')
           hasSubscribed = true
+        } catch (err: any) {
+          logPushEvent(`Failed to save token to database: ${err.message}`, true)
         }
       });
 
