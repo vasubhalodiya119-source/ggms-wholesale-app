@@ -17,6 +17,7 @@ import {
   Users 
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import ImageUploadField from '@/components/ImageUploadField'
 
 type LowStockAlert = {
   id: string
@@ -601,13 +602,20 @@ export default function NotificationCenterPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Image Banner URL (Optional)</label>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Image Banner / ઈમેજ અપલોડ (Optional)</label>
+                <div className="bg-slate-50/50 p-2 border border-slate-100 rounded-xl">
+                  <ImageUploadField
+                    value={notifImage || null}
+                    onChange={(url) => setNotifImage(url)}
+                    hint="કમ્પ્યુટર અથવા ફોનમાંથી ફોટો અપલોડ કરો"
+                  />
+                </div>
                 <input
                   type="text"
                   value={notifImage}
                   onChange={(e) => setNotifImage(e.target.value)}
-                  placeholder="https://example.com/banner.jpg"
-                  className="w-full text-xs font-bold p-3 bg-slate-50/70 border border-slate-200 rounded-xl focus:border-green-500 focus:outline-none"
+                  placeholder="અથવા ઇમેજની સીધી લિંક (https://...) અહિયાં પેસ્ટ કરો"
+                  className="w-full text-[11px] font-bold p-2.5 mt-1 bg-slate-50/70 border border-slate-200 rounded-xl focus:border-green-500 focus:outline-none"
                 />
               </div>
             </div>
