@@ -86,6 +86,25 @@ export default function CartPage() {
 
     await supabase.from('order_items').insert(orderItems)
 
+    // Trigger push notification to admins
+    try {
+      await fetch('/api/send-push', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'new_order',
+          title: 'નવો ઓર્ડર! 🛍️',
+          message: `${shop.shop_name} - ₹${grandTotal.toFixed(2)}`,
+          target_type: 'admin',
+          buttonLink: `/admin/dashboard?new_order=${order.id}`,
+        }),
+      })
+    } catch (pushErr) {
+      console.error('Failed to notify admins of new order:', pushErr)
+    }
+
     clearCart()
     router.push(`/orders/${order.id}`)
   }

@@ -75,17 +75,27 @@ export async function POST(req: Request) {
   try {
     initWebPush()
     const payload = await req.json()
-    const { 
-      type, 
-      title, 
-      message, 
-      image, 
-      buttonText, 
-      buttonLink, 
-      target_type, 
-      selected_customer_ids, 
-      segment_type 
-    } = payload
+    
+    // Normalize fields (supports both custom broadcast and system triggerPush format)
+    let type = payload.type || 'system_alert'
+    let title = payload.title
+    let message = payload.message || payload.body
+    let image = payload.image
+    let buttonText = payload.buttonText
+    let buttonLink = payload.buttonLink || payload.url
+    let target_type = payload.target_type
+    let selected_customer_ids = payload.selected_customer_ids
+    let segment_type = payload.segment_type
+
+    // If target_type is not provided, try to infer it from other properties
+    if (!target_type) {
+      if (payload.shop_id) {
+        target_type = 'selected'
+        selected_customer_ids = [payload.shop_id]
+      } else {
+        target_type = 'all'
+      }
+    }
 
     if (!type || !title || !message || !target_type) {
       return NextResponse.json({ error: 'type, title, message, and target_type are required' }, { status: 400 })
@@ -98,6 +108,11 @@ export async function POST(req: Request) {
     if (target_type === 'all') {
       targetValueDescription = 'All Customers'
       const { data: subs, error } = await supabase.from('push_subscriptions').select('*')
+      if (error) throw error
+      targetTokens = subs || []
+    } else if (target_type === 'admin') {
+      targetValueDescription = 'All Admins'
+      const { data: subs, error } = await supabase.from('admin_push_subscriptions').select('*')
       if (error) throw error
       targetTokens = subs || []
     } else if (target_type === 'selected') {
