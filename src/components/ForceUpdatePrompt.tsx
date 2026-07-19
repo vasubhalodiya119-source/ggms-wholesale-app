@@ -17,25 +17,37 @@ export default function ForceUpdatePrompt() {
 
       try {
         const info = await App.getInfo();
-        const currentBuild = parseInt(info.build, 10);
-        if (isNaN(currentBuild)) return;
+        const currentBuild = parseInt(info.build, 10) || 1;
 
         // Fetch settings from Supabase
         const { data, error } = await supabase
           .from("app_settings")
           .select("value")
-          .eq("key", "android_version")
-          .single();
+          .in("key", ["android_version", "app_version"])
+          .limit(1);
 
-        if (error || !data) {
+        if (error || !data || data.length === 0) {
           console.error("Failed to fetch app version settings:", error);
           return;
         }
 
-        const settings = data.value as { min_version: number; latest_version: number; download_url: string };
-        
-        if (currentBuild < settings.min_version) {
-          setDownloadUrl(settings.download_url);
+        let rawVal = data[0].value;
+        if (typeof rawVal === "string") {
+          try {
+            rawVal = JSON.parse(rawVal);
+          } catch (e) {
+            console.error("JSON parse error on version settings:", e);
+          }
+        }
+
+        const settings = rawVal as any;
+        if (!settings) return;
+
+        const minVersion = parseInt(String(settings.min_version || settings.minVersion || 0), 10);
+        const url = settings.download_url || settings.app_download_url || "https://ggms-wholesale-app.vercel.app/GGMS-Wholesale.apk";
+
+        if (minVersion > 0 && currentBuild < minVersion) {
+          setDownloadUrl(url);
           setUpdateRequired(true);
         }
       } catch (err) {
