@@ -37,14 +37,12 @@ function initFirebase() {
   try {
     const { getApps, initializeApp, cert } = require('firebase-admin/app')
     if (!getApps().length) {
-      // Try env var first (for Vercel / production), then fall back to local file
       const envJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON
       let serviceAccount: any
 
       if (envJson) {
         serviceAccount = JSON.parse(envJson)
       } else {
-        // Fallback: try loading from file dynamically (local development)
         try {
           const fs = require('fs')
           const path = require('path')
@@ -77,53 +75,141 @@ export async function POST(req: Request) {
   try {
     initWebPush()
     const payload = await req.json()
-    const { title, body, url, shop_id } = payload
+    const { 
+      type, 
+      title, 
+      message, 
+      image, 
+      buttonText, 
+      buttonLink, 
+      target_type, 
+      selected_customer_ids, 
+      segment_type 
+    } = payload
 
-    // Build the query
-    let query = supabase.from('push_subscriptions').select('*')
-    if (shop_id) {
-      query = query.eq('shop_id', shop_id)
+    if (!type || !title || !message || !target_type) {
+      return NextResponse.json({ error: 'type, title, message, and target_type are required' }, { status: 400 })
     }
 
-    const { data: subscriptions, error } = await query
+    let targetTokens = []
+    let targetValueDescription = 'All Customers'
 
-    if (error) {
-      throw error
+    // 1. Filter Subscriptions based on Target Type
+    if (target_type === 'all') {
+      targetValueDescription = 'All Customers'
+      const { data: subs, error } = await supabase.from('push_subscriptions').select('*')
+      if (error) throw error
+      targetTokens = subs || []
+    } else if (target_type === 'selected') {
+      if (!Array.isArray(selected_customer_ids) || selected_customer_ids.length === 0) {
+        return NextResponse.json({ error: "selected_customer_ids must be a non-empty array for target_type 'selected'" }, { status: 400 })
+      }
+      targetValueDescription = `${selected_customer_ids.length} Selected Customer(s)`
+      const { data: subs, error } = await supabase
+        .from('push_subscriptions')
+        .select('*')
+        .in('shop_id', selected_customer_ids)
+      if (error) throw error
+      targetTokens = subs || []
+    } else if (target_type === 'segment') {
+      if (!segment_type) {
+        return NextResponse.json({ error: "segment_type is required for target_type 'segment'" }, { status: 400 })
+      }
+
+      // Fetch all shops and orders to evaluate segment rules
+      const { data: allShops, error: shopErr } = await supabase.from('shops').select('*')
+      const { data: allOrders, error: orderErr } = await supabase.from('orders').select('*')
+      
+      if (shopErr) throw shopErr
+      if (orderErr) throw orderErr
+
+      const now = Date.now()
+      let filteredShops = []
+
+      if (segment_type === 'new') {
+        targetValueDescription = 'New Customers (Registered <= 7 days)'
+        filteredShops = (allShops || []).filter((s) => {
+          if (!s.created_at) return false
+          const diffDays = (now - new Date(s.created_at).getTime()) / (1000 * 60 * 60 * 24)
+          return diffDays <= 7
+        })
+      } else if (segment_type === 'regular') {
+        targetValueDescription = 'Regular Customers (> 3 orders)'
+        filteredShops = (allShops || []).filter((s) => {
+          const count = (allOrders || []).filter((o) => o.shop_id === s.id).length
+          return count > 3
+        })
+      } else if (segment_type === 'inactive') {
+        targetValueDescription = 'Inactive Customers (No order or > 15 days ago)'
+        filteredShops = (allShops || []).filter((s) => {
+          const shopOrders = (allOrders || []).filter((o) => o.shop_id === s.id)
+          if (shopOrders.length === 0) {
+            if (!s.created_at) return true
+            const diffDays = (now - new Date(s.created_at).getTime()) / (1000 * 60 * 60 * 24)
+            return diffDays > 15
+          }
+          shopOrders.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          const latestOrder = shopOrders[0]
+          const diffDays = (now - new Date(latestOrder.created_at).getTime()) / (1000 * 60 * 60 * 24)
+          return diffDays > 15
+        })
+      } else if (segment_type === 'high_value') {
+        targetValueDescription = 'High Value Customers (Spent > ₹1500)'
+        filteredShops = (allShops || []).filter((s) => {
+          const totalSpent = (allOrders || [])
+            .filter((o) => o.shop_id === s.id)
+            .reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0)
+          return totalSpent > 1500
+        })
+      } else {
+        return NextResponse.json({ error: `Unknown segment_type: ${segment_type}` }, { status: 400 })
+      }
+
+      const shopIds = filteredShops.map((s) => s.id)
+      if (shopIds.length > 0) {
+        const { data: subs, error: subErr } = await supabase
+          .from('push_subscriptions')
+          .select('*')
+          .in('shop_id', shopIds)
+        if (subErr) throw subErr
+        targetTokens = subs || []
+      }
+    } else {
+      return NextResponse.json({ error: `Unknown target_type: ${target_type}` }, { status: 400 })
     }
 
-    if (!subscriptions || subscriptions.length === 0) {
-      return NextResponse.json({ message: 'No subscriptions found' }, { status: 200 })
+    if (targetTokens.length === 0) {
+      return NextResponse.json({ 
+        success: true, 
+        message: 'No registered device tokens found for target',
+        stats: { totalAttempted: 0, succeeded: 0, failed: 0 }
+      })
     }
 
-    const notificationPayload = JSON.stringify({
-      title: title || 'Notification',
-      body: body || '',
-      url: url || '/',
-    })
-
+    // 2. Dispatch Notifications
     let successCount = 0
     let failCount = 0
 
-    const sendPromises = subscriptions.map(async (sub) => {
+    const sendPromises = targetTokens.map(async (sub) => {
       if (sub.auth === 'fcm') {
-        // Native Push via FCM
+        // Native Push via Firebase FCM
         const ready = initFirebase()
         if (!ready) {
-          console.error('Firebase admin not initialized, skipping FCM push to:', sub.endpoint?.substring(0, 20))
+          console.error('Firebase admin not initialized, skipping FCM push.')
           failCount++
           return
         }
 
         try {
           const { getMessaging } = require('firebase-admin/messaging')
-          await getMessaging().send({
-            token: sub.endpoint, // We stored FCM token in endpoint
+          const fcmPayload: any = {
+            token: sub.endpoint,
             notification: {
-              title: title || 'Notification',
-              body: body || ''
+              title: title,
+              body: message,
             },
             data: {
-              url: url || '/'
+              url: buttonLink || '/'
             },
             android: {
               priority: 'high',
@@ -133,19 +219,28 @@ export async function POST(req: Request) {
                 channelId: 'ggms_notifications'
               }
             }
-          })
-          console.log('FCM push sent successfully to', sub.endpoint?.substring(0, 20) + '...')
+          }
+
+          if (image) {
+            fcmPayload.notification.imageUrl = image
+            fcmPayload.data.image = image
+          }
+          if (buttonText && buttonLink) {
+            fcmPayload.data.buttonText = buttonText
+            fcmPayload.data.buttonLink = buttonLink
+          }
+
+          await getMessaging().send(fcmPayload)
           successCount++
         } catch (e: any) {
           console.error('Error sending FCM push:', e?.message || e)
           failCount++
           if (e.code === 'messaging/invalid-registration-token' || e.code === 'messaging/registration-token-not-registered') {
-            console.log('FCM token invalid, deleting...', sub.endpoint?.substring(0, 20))
             await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
           }
         }
       } else {
-        // Web Push
+        // Standard Web Push
         const pushSubscription = {
           endpoint: sub.endpoint,
           keys: {
@@ -153,28 +248,58 @@ export async function POST(req: Request) {
             auth: sub.auth,
           },
         }
-        return webpush.sendNotification(pushSubscription, notificationPayload).then(() => {
+
+        const webPushPayload = JSON.stringify({
+          title,
+          body: message,
+          url: buttonLink || '/',
+          image: image || '',
+          buttonText: buttonText || '',
+          buttonLink: buttonLink || '',
+          type
+        })
+
+        try {
+          await webpush.sendNotification(pushSubscription, webPushPayload)
           successCount++
-        }).catch(async (e) => {
-          // If subscription is invalid/expired, remove it
+        } catch (e: any) {
           if (e.statusCode === 410 || e.statusCode === 404) {
-            console.log('WebPush subscription expired or invalid, deleting...', sub.endpoint?.substring(0, 20))
             await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
           } else {
             console.error('Error sending Web push:', e?.message || e)
           }
           failCount++
-        })
+        }
       }
     })
 
     await Promise.all(sendPromises)
 
-    return NextResponse.json({ 
-      success: true, 
-      total: subscriptions.length,
-      sent: successCount,
-      failed: failCount
+    // 3. Store Broadcast History Log as JSON inside the message column
+    const broadcastPayload = JSON.stringify({
+      type,
+      title,
+      message,
+      image: image || '',
+      buttonText: buttonText || '',
+      buttonLink: buttonLink || '',
+      target_type,
+      target_value: targetValueDescription,
+      sent_count: successCount,
+      created_at: new Date().toISOString()
+    })
+
+    await supabase.from('broadcasts').insert({
+      message: broadcastPayload
+    })
+
+    return NextResponse.json({
+      success: true,
+      stats: {
+        totalAttempted: targetTokens.length,
+        succeeded: successCount,
+        failed: failCount
+      }
     })
   } catch (error) {
     const e = error as Error
@@ -182,4 +307,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }
-
