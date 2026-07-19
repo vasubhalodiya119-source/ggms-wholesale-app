@@ -11,28 +11,90 @@ type Props = {
   hint?: string
 }
 
+function compressImage(file: File, maxWidth = 800, maxHeight = 800, quality = 0.8): Promise<Blob | File> {
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = (event) => {
+      const img = new Image()
+      img.src = event.target?.result as string
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        let width = img.width
+        let height = img.height
+
+        if (width > maxWidth || height > maxHeight) {
+          if (width > height) {
+            height = Math.round((height * maxWidth) / width)
+            width = maxWidth
+          } else {
+            width = Math.round((width * maxHeight) / height)
+            height = maxHeight
+          }
+        }
+
+        canvas.width = width
+        canvas.height = height
+
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          resolve(file)
+          return
+        }
+
+        ctx.drawImage(img, 0, 0, width, height)
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob)
+            } else {
+              resolve(file)
+            }
+          },
+          'image/jpeg',
+          quality
+        )
+      }
+      img.onerror = () => resolve(file)
+    }
+    reader.onerror = () => resolve(file)
+  })
+}
+
 export default function ImageUploadField({ value, onChange, label, hint }: Props) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const originalFile = e.target.files?.[0]
+    if (!originalFile) return
 
     setError('')
     setUploading(true)
 
-    const ext = file.name.split('.').pop()
+    // Compress image before upload to ensure small file size (under 100KB) for push notifications and fast loading
+    let fileToUpload: File | Blob = originalFile
+    if (originalFile.type.startsWith('image/')) {
+      try {
+        fileToUpload = await compressImage(originalFile, 1024, 1024, 0.75)
+      } catch (err) {
+        console.error('Failed to compress image:', err)
+      }
+    }
+
+    const ext = originalFile.name.split('.').pop() || 'jpg'
     const fileName = `${crypto.randomUUID()}.${ext}`
     const path = `uploads/${fileName}`
 
-    const { error: uploadError } = await supabase.storage.from('public-assets').upload(path, file, {
+    const { error: uploadError } = await supabase.storage.from('public-assets').upload(path, fileToUpload, {
       cacheControl: '3600',
       upsert: false,
+      contentType: originalFile.type
     })
 
     if (uploadError) {
+      console.error('Upload error details:', uploadError)
       setError('અપલોડ કરવામાં ભૂલ થઈ')
       setUploading(false)
       return
