@@ -221,30 +221,21 @@ export async function POST(req: Request) {
           const { getMessaging } = require('firebase-admin/messaging')
           const fcmPayload: any = {
             token: sub.endpoint,
-            notification: {
-              title: title,
-              body: message,
-            },
             data: {
+              title: title || '',
+              body: message || '',
+              message: message || '',
               url: buttonLink || '/',
               order_id: order_id || '',
               customer_shop_id: customer_shop_id || '',
               type: type || 'system_alert'
             },
             android: {
-              priority: 'high',
-              notification: {
-                sound: 'default',
-                priority: 'high',
-                channelId: 'ggms_notifications',
-                clickAction: 'new_order_actions'
-              }
+              priority: 'high'
             }
           }
 
           if (image) {
-            fcmPayload.notification.image = image
-            fcmPayload.android.notification.image = image
             fcmPayload.data.image = image
           }
           if (buttonText && buttonLink) {
