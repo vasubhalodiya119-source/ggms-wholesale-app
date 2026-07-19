@@ -100,6 +100,7 @@ export default function CartPage() {
           target_type: 'admin',
           buttonLink: `/admin/dashboard?new_order=${order.id}`,
           order_id: order.id,
+          customer_shop_id: shop.id,
         }),
       })
     } catch (pushErr) {

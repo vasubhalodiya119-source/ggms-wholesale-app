@@ -87,6 +87,7 @@ export async function POST(req: Request) {
     let selected_customer_ids = payload.selected_customer_ids
     let segment_type = payload.segment_type
     let order_id = payload.order_id
+    let customer_shop_id = payload.customer_shop_id
 
     // If target_type is not provided, try to infer it from other properties
     if (!target_type) {
@@ -226,7 +227,9 @@ export async function POST(req: Request) {
             },
             data: {
               url: buttonLink || '/',
-              order_id: order_id || ''
+              order_id: order_id || '',
+              customer_shop_id: customer_shop_id || '',
+              type: type || 'system_alert'
             },
             android: {
               priority: 'high',
