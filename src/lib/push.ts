@@ -132,8 +132,18 @@ export async function subscribeToPush(shopId: string | null) {
         logPushEvent(`Push notification received: ${notification.title}`);
       });
 
-      await PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
-        logPushEvent(`Push notification action performed: ${notification.actionId}`);
+      await PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+        logPushEvent(`Push notification action performed: ${action.actionId}`);
+        try {
+          const data = action.notification?.data;
+          const url = data?.url || data?.buttonLink;
+          if (url) {
+            logPushEvent(`Redirecting to: ${url}`);
+            window.location.href = url;
+          }
+        } catch (err: any) {
+          logPushEvent(`Redirect failed: ${err.message}`, true);
+        }
       });
 
       logPushEvent('Creating high-importance push notification channel...')
