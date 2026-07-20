@@ -83,13 +83,15 @@ export async function subscribeToPush(shopId: string | null) {
       logPushEvent('Native platform detected')
       let permStatus = await PushNotifications.checkPermissions();
       logPushEvent(`Initial permission status: ${permStatus.receive}`)
-      if (permStatus.receive === 'prompt' || permStatus.receive === 'prompt-with-rationale') {
-        logPushEvent('Requesting push permissions...')
+      if (permStatus.receive !== 'granted') {
+        logPushEvent('Requesting native push permissions...')
         permStatus = await PushNotifications.requestPermissions();
         logPushEvent(`Permission request result: ${permStatus.receive}`)
       }
       if (permStatus.receive !== 'granted') {
         logPushEvent('User denied push permission', true);
+        isSubscribing = false;
+        hasSubscribed = false;
         return;
       }
 

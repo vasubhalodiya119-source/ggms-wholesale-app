@@ -17,11 +17,11 @@ export default function NotificationPrompt() {
       try {
         const status = await getPushPermissionStatus()
         // If it's prompt, we ask natively
-        if (status === 'prompt') {
+        if (status !== 'granted') {
           // Add a small delay so it doesn't pop up the split second they open the app
           setTimeout(() => {
             subscribeToPush(shop.id).catch(console.error)
-          }, 1500)
+          }, 1000)
         }
       } catch (e) {
         console.error('Error auto-subscribing:', e)
