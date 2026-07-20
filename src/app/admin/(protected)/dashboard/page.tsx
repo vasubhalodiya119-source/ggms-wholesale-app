@@ -361,32 +361,32 @@ function DashboardContent() {
               </div>
 
               {/* Reply to shopkeeper */}
-              <div className="pt-2 border-t border-slate-100">
-                <p className="text-xs font-bold text-slate-500 mb-1.5 flex items-center gap-1.5">
-                  <MessageCircle size={13} /> Shopkeeper ને Reply મોકલો
-                </p>
-                <div className="flex gap-2">
+              <div className="pt-3 border-t border-slate-100 space-y-2.5">
+                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <MessageCircle size={14} className="text-green-600" /> Shopkeeper ને Reply મોકલો
+                </label>
+                <div className="relative">
                   <input
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
                     placeholder="દા.ત. 'ઓર્ડર 1 કલાકમાં મોકલીશ'"
-                    className="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all bg-slate-50/50"
                   />
-                  <button
-                    onClick={sendReplyAndClose}
-                    disabled={actionLoading || !replyText.trim()}
-                    className="bg-slate-900 text-white px-3 rounded-xl disabled:opacity-40"
-                  >
-                    <Send size={16} />
-                  </button>
                 </div>
-                <a
-                  href={buildWhatsAppUrl(newOrderAlert.order, newOrderAlert.items, null)}
-                  target="_blank"
-                  className="mt-2 w-full bg-green-50 text-green-700 text-xs font-bold py-2 rounded-xl flex items-center justify-center gap-1.5"
+                <button
+                  onClick={sendReplyAndClose}
+                  disabled={actionLoading || !replyText.trim()}
+                  className="group w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 active:scale-[0.98] text-white text-sm font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-green-600/20 hover:shadow-green-600/30 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                 >
-                  WhatsApp પર reply કરો
-                </a>
+                  {actionLoading ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <span>મેસેજ મોકલો (Send Message)</span>
+                      <Send size={16} className="group-hover:translate-x-1 group-hover:-translate-y-0.5 transition-transform duration-200" />
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>
