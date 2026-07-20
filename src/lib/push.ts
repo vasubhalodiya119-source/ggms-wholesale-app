@@ -90,8 +90,6 @@ export async function subscribeToPush(shopId: string | null) {
       }
       if (permStatus.receive !== 'granted') {
         logPushEvent('User denied push permission', true);
-        isSubscribing = false;
-        hasSubscribed = false;
         return;
       }
 
