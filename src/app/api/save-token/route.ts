@@ -24,6 +24,8 @@ export async function POST(req: Request) {
         },
         { onConflict: 'endpoint' }
       )
+      // Ensure admin token is removed from customer push_subscriptions
+      await supabase.from('push_subscriptions').delete().eq('endpoint', endpoint)
     } else {
       result = await supabase.from('push_subscriptions').upsert(
         {

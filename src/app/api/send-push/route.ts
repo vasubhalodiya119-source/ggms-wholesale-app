@@ -191,8 +191,15 @@ export async function POST(req: Request) {
         if (subErr) throw subErr
         targetTokens = subs || []
       }
-    } else {
-      return NextResponse.json({ error: `Unknown target_type: ${target_type}` }, { status: 400 })
+    }
+
+    // Exclude any admin tokens from customer notifications
+    if (target_type !== 'admin') {
+      const { data: adminSubs } = await supabase.from('admin_push_subscriptions').select('endpoint')
+      if (adminSubs && adminSubs.length > 0) {
+        const adminEndpoints = new Set(adminSubs.map((a: any) => a.endpoint))
+        targetTokens = targetTokens.filter((t: any) => !adminEndpoints.has(t.endpoint))
+      }
     }
 
     if (targetTokens.length === 0) {

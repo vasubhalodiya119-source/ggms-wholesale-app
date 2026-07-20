@@ -6,6 +6,8 @@ import { ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { Order, OrderItem, OrderStatus } from '@/lib/types'
 
+import { triggerPush } from '@/lib/push'
+
 const statusOptions: OrderStatus[] = ['pending', 'processing', 'delivered', 'cancelled']
 
 export default function AdminOrderDetailPage() {
@@ -30,6 +32,20 @@ export default function AdminOrderDetailPage() {
 
   async function updateStatus(status: OrderStatus) {
     await supabase.from('orders').update({ status }).eq('id', orderId)
+    if (order && order.shop_id) {
+      const statusLabels: Record<string, string> = {
+        processing: '✅ Accept - તમારો ઓર્ડર accept થઈ ગયો!',
+        pending: '⏳ Pending - ઓર્ડર pending છે, રાહ જુઓ',
+        delivered: '🚚 Delivered - તમારો ઓર્ડર ડિલિવર થઈ ગયો!',
+        cancelled: '❌ Decline - ઓર્ડર decline થયો',
+      }
+      await triggerPush({
+        title: 'GGM&S Wholesale - ઓર્ડર Update 📦',
+        body: statusLabels[status] || `ઓર્ડર status: ${status}`,
+        url: `/orders/${order.id}`,
+        shop_id: order.shop_id,
+      })
+    }
     load()
   }
 

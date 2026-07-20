@@ -134,18 +134,7 @@ function DashboardContent() {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'orders' },
-        async (payload) => {
-          const order = payload.new as Order
-          const { data: items } = await supabase.from('order_items').select('*').eq('order_id', order.id)
-          setNewOrderAlert({ order, items: (items as OrderItem[]) || [] })
-          
-          // Play sound alert
-          playNotificationSound()
-          
-          // browser notification (if permitted)
-          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-            new Notification('નવો ઓર્ડર! 🛍️', { body: `${order.shop_name_snapshot} - ₹${order.total_amount}` })
-          }
+        (payload) => {
           load()
         }
       )
