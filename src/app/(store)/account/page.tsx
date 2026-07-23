@@ -192,21 +192,15 @@ export default function AccountPage() {
         >
           <Share2 size={16} /> Share App / એપ શેર કરો
         </button>
-        {settings?.app_download_url ? (
-          <a
-            href={settings.app_download_url}
-            download="GGMS-Wholesale.apk"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full bg-green-600 text-white font-bold py-3 rounded-2xl flex items-center justify-center gap-2"
-          >
-            <Download size={16} /> Download App / એપ ડાઉનલોડ કરો
-          </a>
-        ) : (
-          <button className="w-full bg-green-600 text-white font-bold py-3 rounded-2xl flex items-center justify-center gap-2 opacity-50" disabled>
-            <Download size={16} /> Download App / એપ ડાઉનલોડ કરો
-          </button>
-        )}
+        <a
+          href={settings?.app_download_url || '/GGMS-Wholesale.apk'}
+          download="GGMS-Wholesale.apk"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full bg-green-600 text-white font-bold py-3 rounded-2xl flex items-center justify-center gap-2"
+        >
+          <Download size={16} /> Download App / એપ ડાઉનલોડ કરો
+        </a>
       </div>
 
       <button

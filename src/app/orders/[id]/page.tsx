@@ -41,22 +41,150 @@ export default function OrderDetailPage() {
   }, [orderId])
 
   async function downloadPdf() {
-    if (!receiptRef.current) return
+    if (!order) return
     setDownloading(true)
     try {
-      const html2canvas = (await import('html2canvas')).default
       const { jsPDF } = await import('jspdf')
+      const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+      const pageWidth = doc.internal.pageSize.getWidth()
+      let y = 15
 
-      const canvas = await html2canvas(receiptRef.current, {
-        scale: 2,
-        backgroundColor: '#ffffff',
-        useCORS: true,
+      // Header
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(18)
+      doc.setTextColor(22, 163, 74) // #16a34a
+      const storeName = settings?.store_name || 'GGM&S Wholesale Grocery'
+      doc.text(storeName, pageWidth / 2, y, { align: 'center' })
+      y += 7
+
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(10)
+      doc.setTextColor(100, 116, 139)
+      doc.text('Wholesale & Bulk Order Invoice', pageWidth / 2, y, { align: 'center' })
+      y += 10
+
+      // Divider line
+      doc.setDrawColor(226, 232, 240)
+      doc.line(15, y, pageWidth - 15, y)
+      y += 8
+
+      // Order & Customer Details
+      doc.setFontSize(11)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(15, 23, 42)
+      doc.text(`Order Number: ${order.order_number}`, 15, y)
+
+      const dateStr = new Date(order.created_at).toLocaleString('en-IN')
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(9)
+      doc.setTextColor(100, 116, 139)
+      doc.text(`Date: ${dateStr}`, pageWidth - 15, y, { align: 'right' })
+      y += 7
+
+      doc.setFontSize(10)
+      doc.setTextColor(51, 65, 85)
+      doc.text(`Customer / Shop: ${order.shop_name_snapshot}`, 15, y)
+      y += 5
+      doc.text(`Phone: +91 ${order.shop_phone_snapshot}`, 15, y)
+      y += 5
+      if (order.customer_address) {
+        doc.text(`Address: ${order.customer_address}`, 15, y)
+        y += 5
+      }
+      doc.text(`Delivery Mode: ${order.delivery_mode === 'pickup' ? 'Pick Up at Store' : 'Shop Delivery'}`, 15, y)
+      y += 5
+      const payLabel = paymentLabels[order.payment_method]?.label || order.payment_method
+      doc.text(`Payment Method: ${payLabel}`, 15, y)
+      y += 10
+
+      // Table Header
+      doc.setFillColor(241, 245, 249)
+      doc.rect(15, y, pageWidth - 30, 8, 'F')
+
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(9)
+      doc.setTextColor(15, 23, 42)
+      doc.text('#', 18, y + 5.5)
+      doc.text('Item Description', 28, y + 5.5)
+      doc.text('Qty x Unit', 125, y + 5.5)
+      doc.text('Price', 155, y + 5.5)
+      doc.text('Total (INR)', pageWidth - 18, y + 5.5, { align: 'right' })
+      y += 10
+
+      // Items List
+      doc.setFont('helvetica', 'normal')
+      items.forEach((item, idx) => {
+        if (y > 270) {
+          doc.addPage()
+          y = 15
+        }
+        const itemTotal = item.line_total || (item.qty * item.price)
+        doc.text(String(idx + 1), 18, y)
+        doc.text(String(item.product_name_snapshot).slice(0, 45), 28, y)
+        doc.text(`${item.qty} x ${item.unit_snapshot}`, 125, y)
+        doc.text(`Rs. ${item.price.toFixed(2)}`, 155, y)
+        doc.text(`Rs. ${itemTotal.toFixed(2)}`, pageWidth - 18, y, { align: 'right' })
+        y += 6
       })
-      const imgData = canvas.toDataURL('image/png')
 
-      const pdf = new jsPDF({ unit: 'px', format: [canvas.width / 2, canvas.height / 2] })
-      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2)
-      pdf.save(`${order?.order_number || 'bill'}.pdf`)
+      y += 2
+      doc.setDrawColor(226, 232, 240)
+      doc.line(15, y, pageWidth - 15, y)
+      y += 8
+
+      // Grand Total
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(11)
+      doc.setTextColor(15, 23, 42)
+      doc.text('GRAND TOTAL:', 125, y)
+      doc.setTextColor(22, 163, 74)
+      doc.text(`Rs. ${order.total_amount.toFixed(2)}`, pageWidth - 18, y, { align: 'right' })
+      y += 6
+
+      if (order.amount_due > 0) {
+        doc.setFontSize(10)
+        doc.setTextColor(220, 38, 38)
+        doc.text('Amount Due:', 125, y)
+        doc.text(`Rs. ${order.amount_due.toFixed(2)}`, pageWidth - 18, y, { align: 'right' })
+        y += 6
+      }
+
+      y += 10
+      doc.setFont('helvetica', 'italic')
+      doc.setFontSize(9)
+      doc.setTextColor(100, 116, 139)
+      doc.text('Thank you for shopping with us!', pageWidth / 2, y, { align: 'center' })
+
+      const fileName = `${order.order_number || 'GGMS-Order-Receipt'}.pdf`
+      const blob = doc.output('blob')
+
+      // Check Mobile Web Share API
+      const file = new File([blob], fileName, { type: 'application/pdf' })
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: fileName,
+            text: `Order Invoice ${order.order_number}`,
+          })
+          return
+        } catch (shareErr) {
+          console.log('Share dismissed:', shareErr)
+        }
+      }
+
+      // Download Trigger & Blob URL Fallback
+      const blobUrl = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.download = fileName
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000)
+    } catch (err) {
+      console.error('PDF Generation Error:', err)
+      alert('PDF ડાઉનલોડ કરવામાં ભૂલ થઈ. કૃપા કરીને ફરી પ્રયત્ન કરો.')
     } finally {
       setDownloading(false)
     }
