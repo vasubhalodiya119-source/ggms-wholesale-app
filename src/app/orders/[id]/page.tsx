@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { QRCodeSVG } from 'qrcode.react'
-import { CheckCircle2, Banknote, QrCode, BookUser, Download, Loader2, Package, Truck, Store } from 'lucide-react'
+import { CheckCircle2, Banknote, QrCode, BookUser, Download, Loader2, Package, Truck, Store, Printer } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { Order, OrderItem, Settings } from '@/lib/types'
 import { buildWhatsAppUrl } from '@/lib/receipt'
@@ -44,147 +44,77 @@ export default function OrderDetailPage() {
     if (!order) return
     setDownloading(true)
     try {
-      const { jsPDF } = await import('jspdf')
-      const doc = new jsPDF({ unit: 'mm', format: 'a4' })
-      const pageWidth = doc.internal.pageSize.getWidth()
-      let y = 15
+      const pdfUrl = `${window.location.origin}/api/pdf/${order.id}`
 
-      // Header
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(18)
-      doc.setTextColor(22, 163, 74) // #16a34a
-      const storeName = settings?.store_name || 'GGM&S Wholesale Grocery'
-      doc.text(storeName, pageWidth / 2, y, { align: 'center' })
-      y += 7
-
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(10)
-      doc.setTextColor(100, 116, 139)
-      doc.text('Wholesale & Bulk Order Invoice', pageWidth / 2, y, { align: 'center' })
-      y += 10
-
-      // Divider line
-      doc.setDrawColor(226, 232, 240)
-      doc.line(15, y, pageWidth - 15, y)
-      y += 8
-
-      // Order & Customer Details
-      doc.setFontSize(11)
-      doc.setFont('helvetica', 'bold')
-      doc.setTextColor(15, 23, 42)
-      doc.text(`Order Number: ${order.order_number}`, 15, y)
-
-      const dateStr = new Date(order.created_at).toLocaleString('en-IN')
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(9)
-      doc.setTextColor(100, 116, 139)
-      doc.text(`Date: ${dateStr}`, pageWidth - 15, y, { align: 'right' })
-      y += 7
-
-      doc.setFontSize(10)
-      doc.setTextColor(51, 65, 85)
-      doc.text(`Customer / Shop: ${order.shop_name_snapshot}`, 15, y)
-      y += 5
-      doc.text(`Phone: +91 ${order.shop_phone_snapshot}`, 15, y)
-      y += 5
-      if (order.customer_address) {
-        doc.text(`Address: ${order.customer_address}`, 15, y)
-        y += 5
-      }
-      doc.text(`Delivery Mode: ${order.delivery_mode === 'pickup' ? 'Pick Up at Store' : 'Shop Delivery'}`, 15, y)
-      y += 5
-      const payLabel = paymentLabels[order.payment_method]?.label || order.payment_method
-      doc.text(`Payment Method: ${payLabel}`, 15, y)
-      y += 10
-
-      // Table Header
-      doc.setFillColor(241, 245, 249)
-      doc.rect(15, y, pageWidth - 30, 8, 'F')
-
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(9)
-      doc.setTextColor(15, 23, 42)
-      doc.text('#', 18, y + 5.5)
-      doc.text('Item Description', 28, y + 5.5)
-      doc.text('Qty x Unit', 125, y + 5.5)
-      doc.text('Price', 155, y + 5.5)
-      doc.text('Total (INR)', pageWidth - 18, y + 5.5, { align: 'right' })
-      y += 10
-
-      // Items List
-      doc.setFont('helvetica', 'normal')
-      items.forEach((item, idx) => {
-        if (y > 270) {
-          doc.addPage()
-          y = 15
-        }
-        const itemTotal = item.line_total || (item.qty * item.price)
-        doc.text(String(idx + 1), 18, y)
-        doc.text(String(item.product_name_snapshot).slice(0, 45), 28, y)
-        doc.text(`${item.qty} x ${item.unit_snapshot}`, 125, y)
-        doc.text(`Rs. ${item.price.toFixed(2)}`, 155, y)
-        doc.text(`Rs. ${itemTotal.toFixed(2)}`, pageWidth - 18, y, { align: 'right' })
-        y += 6
-      })
-
-      y += 2
-      doc.setDrawColor(226, 232, 240)
-      doc.line(15, y, pageWidth - 15, y)
-      y += 8
-
-      // Grand Total
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(11)
-      doc.setTextColor(15, 23, 42)
-      doc.text('GRAND TOTAL:', 125, y)
-      doc.setTextColor(22, 163, 74)
-      doc.text(`Rs. ${order.total_amount.toFixed(2)}`, pageWidth - 18, y, { align: 'right' })
-      y += 6
-
-      if (order.amount_due > 0) {
-        doc.setFontSize(10)
-        doc.setTextColor(220, 38, 38)
-        doc.text('Amount Due:', 125, y)
-        doc.text(`Rs. ${order.amount_due.toFixed(2)}`, pageWidth - 18, y, { align: 'right' })
-        y += 6
-      }
-
-      y += 10
-      doc.setFont('helvetica', 'italic')
-      doc.setFontSize(9)
-      doc.setTextColor(100, 116, 139)
-      doc.text('Thank you for shopping with us!', pageWidth / 2, y, { align: 'center' })
-
-      const fileName = `${order.order_number || 'GGMS-Order-Receipt'}.pdf`
-      const blob = doc.output('blob')
-
-      // Check Mobile Web Share API
-      const file = new File([blob], fileName, { type: 'application/pdf' })
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      // If running inside Capacitor Native Android APK
+      const { Capacitor } = await import('@capacitor/core')
+      if (Capacitor.isNativePlatform()) {
         try {
-          await navigator.share({
-            files: [file],
-            title: fileName,
-            text: `Order Invoice ${order.order_number}`,
-          })
+          const { Browser } = await import('@capacitor/browser')
+          await Browser.open({ url: pdfUrl })
+          setDownloading(false)
           return
-        } catch (shareErr) {
-          console.log('Share dismissed:', shareErr)
+        } catch (capErr) {
+          console.warn('Capacitor Browser open failed, using fallback:', capErr)
         }
       }
 
-      // Download Trigger & Blob URL Fallback
-      const blobUrl = URL.createObjectURL(blob)
+      // Standard Browser / PWA: HTTP download via /api/pdf/[id]
       const link = document.createElement('a')
-      link.href = blobUrl
-      link.download = fileName
+      link.href = pdfUrl
+      link.download = `${order.order_number || 'receipt'}.pdf`
+      link.target = '_blank'
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000)
     } catch (err) {
-      console.error('PDF Generation Error:', err)
-      alert('PDF ડાઉનલોડ કરવામાં ભૂલ થઈ. કૃપા કરીને ફરી પ્રયત્ન કરો.')
+      console.error('Download PDF failed:', err)
+      // Client-side jsPDF fallback
+      try {
+        const { jsPDF } = await import('jspdf')
+        const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+        const pageWidth = doc.internal.pageSize.getWidth()
+        let y = 15
+
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(18)
+        doc.setTextColor(22, 163, 74)
+        doc.text(settings?.store_name || 'GGM&S Wholesale Grocery', pageWidth / 2, y, { align: 'center' })
+        y += 7
+
+        doc.setFont('helvetica', 'normal')
+        doc.setFontSize(10)
+        doc.setTextColor(100, 116, 139)
+        doc.text('Wholesale & Bulk Order Invoice', pageWidth / 2, y, { align: 'center' })
+        y += 10
+
+        doc.setFontSize(11)
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(15, 23, 42)
+        doc.text(`Order Number: ${order.order_number}`, 15, y)
+        y += 7
+
+        doc.setFontSize(10)
+        doc.setTextColor(51, 65, 85)
+        doc.text(`Customer / Shop: ${order.shop_name_snapshot}`, 15, y)
+        y += 5
+        doc.text(`Phone: +91 ${order.shop_phone_snapshot}`, 15, y)
+        y += 10
+
+        items.forEach((item, idx) => {
+          doc.text(`${idx + 1}. ${item.product_name_snapshot} (${item.qty} x ${item.unit_snapshot}) - Rs. ${(item.line_total || item.qty * item.price).toFixed(2)}`, 15, y)
+          y += 6
+        })
+
+        y += 5
+        doc.setFont('helvetica', 'bold')
+        doc.text(`GRAND TOTAL: Rs. ${order.total_amount.toFixed(2)}`, 15, y)
+
+        const fileName = `${order.order_number || 'GGMS-Order-Receipt'}.pdf`
+        doc.save(fileName)
+      } catch (fallbackErr) {
+        alert('PDF ડાઉનલોડ કરવામાં ભૂલ થઈ, કૃપા કરી ફરી પ્રયત્ન કરો.')
+      }
     } finally {
       setDownloading(false)
     }
@@ -307,7 +237,7 @@ export default function OrderDetailPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 no-print">
         <button
           onClick={downloadPdf}
           disabled={downloading}
@@ -316,10 +246,16 @@ export default function OrderDetailPage() {
           {downloading ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
           PDF Download
         </button>
+        <button
+          onClick={() => window.print()}
+          className="bg-slate-800 text-white font-bold py-3 rounded-2xl flex items-center justify-center gap-2 text-sm"
+        >
+          <Printer size={16} /> પ્રિન્ટ / Save PDF
+        </button>
         <a
           href={buildWhatsAppUrl(order, items, settings)}
           target="_blank"
-          className="bg-green-600 text-white font-bold py-3 rounded-2xl flex items-center justify-center gap-2 text-sm"
+          className="col-span-2 bg-green-600 text-white font-bold py-3 rounded-2xl flex items-center justify-center gap-2 text-sm"
         >
           WhatsApp બિલ
         </a>
