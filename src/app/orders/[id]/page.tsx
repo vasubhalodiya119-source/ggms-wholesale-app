@@ -40,11 +40,18 @@ export default function OrderDetailPage() {
     })
   }, [orderId])
 
+  const getProductionPdfUrl = (id: string) => {
+    if (typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost') && !window.location.origin.includes('127.0.0.1')) {
+      return `${window.location.origin}/api/pdf/${id}`
+    }
+    return `https://ggms-wholesale-app.vercel.app/api/pdf/${id}`
+  }
+
   async function downloadPdf() {
     if (!order) return
     setDownloading(true)
     try {
-      const pdfUrl = `${window.location.origin}/api/pdf/${order.id}`
+      const pdfUrl = getProductionPdfUrl(order.id)
 
       // If running inside Capacitor Native Android APK
       const { Capacitor } = await import('@capacitor/core')
@@ -117,6 +124,18 @@ export default function OrderDetailPage() {
       }
     } finally {
       setDownloading(false)
+    }
+  }
+
+  async function handlePrintClick() {
+    if (!order) return
+    const { Capacitor } = await import('@capacitor/core')
+    if (Capacitor.isNativePlatform()) {
+      const pdfUrl = getProductionPdfUrl(order.id)
+      const { Browser } = await import('@capacitor/browser')
+      await Browser.open({ url: pdfUrl })
+    } else {
+      window.print()
     }
   }
 
@@ -247,7 +266,7 @@ export default function OrderDetailPage() {
           PDF Download
         </button>
         <button
-          onClick={() => window.print()}
+          onClick={handlePrintClick}
           className="bg-slate-800 text-white font-bold py-3 rounded-2xl flex items-center justify-center gap-2 text-sm"
         >
           <Printer size={16} /> પ્રિન્ટ / Save PDF
