@@ -21,7 +21,7 @@ export default function AppSplashScreen() {
       >
         <div className="w-36 h-36 sm:w-44 sm:h-44 flex items-center justify-center">
           <Image
-            src="/logo.png"
+            src="/logo-transparent.png"
             alt="GGM&S Wholesale"
             width={176}
             height={176}

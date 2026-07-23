@@ -27,7 +27,7 @@ export default function HomePulseLoader() {
         style={{ willChange: 'transform, opacity' }}
       >
         <Image
-          src="/logo.png"
+          src="/logo-transparent.png"
           alt="Loading..."
           width={160}
           height={160}
