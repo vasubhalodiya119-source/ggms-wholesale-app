@@ -8,6 +8,8 @@ import { supabase } from '@/lib/supabase'
 import { Product, Category, ProductVariant } from '@/lib/types'
 import { useCart } from '@/lib/cart-context'
 
+import ProductSkeleton from '@/components/ProductSkeleton'
+
 function ProductsContent() {
   const searchParams = useSearchParams()
   const categoryId = searchParams.get('category')
@@ -17,6 +19,7 @@ function ProductsContent() {
   const [variants, setVariants] = useState<Record<string, ProductVariant[]>>({})
   const [selectedVariant, setSelectedVariant] = useState<Record<string, ProductVariant | null>>({})
   const [showVariantPicker, setShowVariantPicker] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
   const { items, addItem, updateQty } = useCart()
 
   useEffect(() => {
@@ -26,13 +29,13 @@ function ProductsContent() {
   }, [])
 
   useEffect(() => {
+    setLoading(true)
     let query = supabase.from('products').select('*').eq('is_active', true)
     if (activeCategory) query = query.eq('category_id', activeCategory)
     query.order('name').then(async ({ data }) => {
       const prods = (data as Product[]) || []
       setProducts(prods)
 
-      // fetch variants for all products
       if (prods.length > 0) {
         const ids = prods.map(p => p.id)
         const { data: varData } = await supabase
@@ -48,13 +51,13 @@ function ProductsContent() {
         }
         setVariants(grouped)
 
-        // auto-select first variant for each product
         const autoSelect: Record<string, ProductVariant | null> = {}
         for (const p of prods) {
           autoSelect[p.id] = grouped[p.id]?.[0] || null
         }
         setSelectedVariant(autoSelect)
       }
+      setLoading(false)
     })
   }, [activeCategory])
 
@@ -82,6 +85,10 @@ function ProductsContent() {
   function handleAddToCart(product: Product) {
     const v = selectedVariant[product.id]
     addItem(product, 1, v || undefined)
+  }
+
+  if (loading) {
+    return <ProductSkeleton />
   }
 
   return (
@@ -235,7 +242,7 @@ function ProductsContent() {
 
 export default function ProductsPage() {
   return (
-    <Suspense fallback={<div className="p-4 text-sm text-slate-400">Loading...</div>}>
+    <Suspense fallback={<ProductSkeleton />}>
       <ProductsContent />
     </Suspense>
   )

@@ -16,6 +16,7 @@
     "@capacitor/push-notifications": "^8.1.2",
     "@supabase/supabase-js": "^2.108.2",
     "firebase-admin": "^14.2.0",
+    "framer-motion": "^12.42.2",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "lucide-react": "^1.21.0",
