@@ -16,24 +16,24 @@ export default function AppSplashScreen() {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1.0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="flex flex-col items-center gap-4 transform-gpu"
+        className="flex flex-col items-center gap-5 transform-gpu"
         style={{ willChange: 'transform, opacity' }}
       >
-        <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-3xl bg-white p-3 shadow-2xl flex items-center justify-center">
+        <div className="w-36 h-36 sm:w-44 sm:h-44 flex items-center justify-center">
           <Image
             src="/logo.png"
             alt="GGM&S Wholesale"
-            width={128}
-            height={128}
-            className="w-full h-full object-contain"
+            width={176}
+            height={176}
+            className="w-full h-full object-contain drop-shadow-xl"
             priority
           />
         </div>
-        <div className="text-center space-y-1">
-          <h1 className="text-white font-extrabold text-xl sm:text-2xl tracking-tight">
+        <div className="text-center space-y-1.5">
+          <h1 className="text-white font-extrabold text-2xl sm:text-3xl tracking-tight">
             GGM&amp;S Wholesale
           </h1>
-          <p className="text-emerald-100 text-xs sm:text-sm font-medium tracking-wide">
+          <p className="text-emerald-100 text-sm sm:text-base font-medium tracking-wide">
             જથ્થાબંધ ગ્રોસરી ઓર્ડર એપ
           </p>
         </div>

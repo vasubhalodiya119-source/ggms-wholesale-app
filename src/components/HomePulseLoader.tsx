@@ -23,14 +23,14 @@ export default function HomePulseLoader() {
           repeat: Infinity,
           ease: 'easeInOut',
         }}
-        className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl p-2 flex items-center justify-center transform-gpu"
+        className="w-32 h-32 sm:w-40 sm:h-40 flex items-center justify-center transform-gpu"
         style={{ willChange: 'transform, opacity' }}
       >
         <Image
           src="/logo.png"
           alt="Loading..."
-          width={112}
-          height={112}
+          width={160}
+          height={160}
           className="w-full h-full object-contain"
           priority
         />
